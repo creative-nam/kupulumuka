@@ -1,0 +1,121 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+@theme inline {
+  --font-sans: var(--font-system);
+  --font-fraunces: var(--font-fraunces-family);
+  --color-page: var(--bg-page);
+  --color-surface: var(--bg-surface);
+  --color-border-default: var(--border);
+  --color-primary-text: var(--text-primary);
+  --color-secondary-text: var(--text-secondary);
+  --color-accent-brand: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-capacity-livre-bg: var(--capacity-livre-bg);
+  --color-capacity-livre-text: var(--capacity-livre-text);
+  --color-capacity-quase-bg: var(--capacity-quase-bg);
+  --color-capacity-quase-text: var(--capacity-quase-text);
+  --color-capacity-esgotado-bg: var(--capacity-esgotado-bg);
+  --color-capacity-esgotado-text: var(--capacity-esgotado-text);
+  --color-tier-oficial-bg: var(--tier-oficial-bg);
+  --color-tier-oficial-text: var(--tier-oficial-text);
+  --color-tier-comunitario-bg: var(--tier-comunitario-bg);
+  --color-tier-comunitario-text: var(--tier-comunitario-text);
+  --radius-card: 12px;
+  --radius-button: 10px;
+  --radius-pill: 9999px;
+  --spacing-card: 12px;
+  --spacing-list-gap: 10px;
+  --spacing-screen-x: 16px;
+  --color-background: var(--bg-page);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-surface);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--bg-surface);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--bg-surface);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--bg-surface);
+  --color-muted-foreground: var(--text-secondary);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--on-accent);
+  --color-destructive: var(--capacity-esgotado-text);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+  --radius-sm: calc(var(--radius-button) * 0.6);
+  --radius-md: calc(var(--radius-button) * 0.8);
+  --radius-lg: var(--radius-card);
+  --radius-xl: calc(var(--radius-card) * 1.2);
+}
+
+[data-theme="light"] {
+  --bg-page: #f2ecdf;
+  --bg-surface: #fffdf8;
+  --border: #e4dac5;
+  --text-primary: #2a2118;
+  --text-secondary: #6b5d4a;
+  --accent: #a8651b;
+  --on-accent: #fffdf8;
+  --capacity-livre-bg: #e7f3e4;
+  --capacity-livre-text: #256d3f;
+  --capacity-quase-bg: #fbefdd;
+  --capacity-quase-text: #9a5b12;
+  --capacity-esgotado-bg: #f7e3e1;
+  --capacity-esgotado-text: #9c2b23;
+  --tier-oficial-bg: #e1eef4;
+  --tier-oficial-text: #1f5c7a;
+  --tier-comunitario-bg: #efe7d5;
+  --tier-comunitario-text: #8a7a5e;
+}
+
+[data-theme="dark"] {
+  --bg-page: #201a12;
+  --bg-surface: #2b2318;
+  --border: #4a3e2c;
+  --text-primary: #f5eedf;
+  --text-secondary: #b8a98c;
+  --accent: #dda24c;
+  --on-accent: #201a12;
+  --capacity-livre-bg: #1e3a2a;
+  --capacity-livre-text: #6fcf97;
+  --capacity-quase-bg: #3d2c12;
+  --capacity-quase-text: #e0a542;
+  --capacity-esgotado-bg: #3b1e1b;
+  --capacity-esgotado-text: #e2867e;
+  --tier-oficial-bg: #16344a;
+  --tier-oficial-text: #7fb8da;
+  --tier-comunitario-bg: #3a331f;
+  --tier-comunitario-text: #c9b989;
+}
+
+:root {
+  --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --radius-button: 10px;
+}
+
+@layer base {
+  * {
+    @apply border-border-default outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-system);
+  }
+}
+
+.font-fraunces {
+  font-family: var(--font-fraunces-family), var(--font-system);
+}
