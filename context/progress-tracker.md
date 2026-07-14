@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 0 — Foundation (unit 0.1 and 0.2 complete)
+- Phase 1 — Core citizen value (unit 1.1 complete)
 
 ## Current Goal
 
-- Next up: Phase 1 — Core citizen value (geographic picker)
+- Next up: **1.2 Shelter search & results** — Tier 1 before Tier 2, capacity status pill, landmark route description.
 
 ## Completed
 
@@ -17,13 +17,15 @@ change.
 
 - **0.2 Database schema & seed data** (`feature-specs/002-database-schema-seed-data.md`) — Prisma schema with `Provincia`, `Distrito`, `Bairro`, `Quarteirao`, `BairroVizinho`, `Shelter`, and `User` models; enums for `CapacityStatus` (AVAILABLE/NEARLY_FULL/FULL), `ShelterTier` (OFFICIAL/COMMUNITY), `UserRole` (CITIZEN/ADMIN), and `VerificationStatus` (UNVERIFIED/PENDING/VERIFIED). Migration applied to Supabase Postgres. Data-driven seed script covering 4 provinces (Cidade de Maputo, Província de Maputo, Sofala, Gaza), 5 distritos, 22 bairros, 30 quarteiroes, 25 shelters (mixed tiers/capacities), 26 bairro-vizinho adjacency pairs (all declared pairs resolve), and 8 users (4 institutional + 4 community). Three mockup shelters (EPC Khongolote, Igreja Católica, Salão Paroquial S. João) seeded under Khongolote with matching tier/capacity per the approved UI mockup. Integration test suite (21 tests) verifies per-province row counts, geographic hierarchy correctness, adjacency across all 4 provinces, bidirectional pair resolution, and data invariants.
 
+- **1.1 Geographic picker** (`feature-specs/003-geographic-picker.md`) — A cascading Província → Distrito → Bairro → Quarteirão selection page at `/explorar`. A build-time script (`scripts/generate-geo-snapshot.ts`) queries the seeded database via Prisma and writes a static nested-tree JSON to `public/geo-snapshot.json`. The GeographicPicker Client Component loads this snapshot once via `fetch` and does all cascading filtering in-memory — zero additional network requests after the initial load. Four styled native `<select>` elements (Província, Distrito, Bairro, Quarteirão) are each disabled until its parent is chosen; changing an earlier selection resets everything below. A "Ver abrigos" primary button is disabled until all four levels are selected. The page is a Server Component; only the interactive picker is `"use client"`. All labels and placeholders are in Portuguese. Snapshot verified by integration test (8 tests), cascading behavior verified by component tests (9 tests), full click-through verified by Playwright e2e test (1 test).
+
 ## In Progress
 
 - None.
 
 ## Next Up
 
-- **1.1 Geographic picker** — Province → district → bairro → quarteirão selection, working against seeded data.
+- **1.2 Shelter search & results** — The screen from the approved mockup: Tier 1 before Tier 2, capacity status pill, landmark route description. Depends on 1.1 for the geographic picker.
 
 ## Open Questions
 
@@ -37,11 +39,28 @@ change.
 - **Scaffold merge:** Next.js was generated in `tmp-scaffold/` and merged into the existing repo root so `AGENTS.md` and `context/` remain siblings of `package.json`.
 - **Prisma v7 config:** Prisma 7.x moved database connection configuration from `schema.prisma`'s `datasource` block to `prisma.config.ts`. The PrismaClient constructor no longer accepts `datasourceUrl`; it requires a driver adapter (`@prisma/adapter-pg`). `prisma.config.ts` uses `DIRECT_URL` for migrations/seed; the runtime client in `lib/db/prisma-client.ts` uses `DATABASE_URL` (pooled) via the adapter.
 - **User model — `carlos@example.com` has both email and phone:** The seed user who owns "Salão Paroquial S. João" needs an email to allow shelter lookup by email (`uploadedByEmail`). This is a minor deviation from the strict "community users have phone only" pattern, documented in the spec as acceptable since `User.phone` and `User.email` are both optional.
+- **Native `<select>` instead of `@base-ui/react/select`:** The spec says "shadcn Select" but the implementation uses native `<select>` elements styled with Tailwind to match `ui-context.md` tokens. Rationale: native selects are fully testable in jsdom with RTL, accessible by default, add zero JS bundle weight for dropdown behavior, and are styled to visually match the design system. `@base-ui/react/select` is available but was not used because its Portal-based popup complicates RTL testing and adds runtime JS overhead that the low-bandwidth invariant doesn't warrant for a simple cascading-select flow.
+- **`globals: true` added to `vitest.config.ts`:** Required so that `@testing-library/react`'s auto-cleanup (which relies on a global `afterEach`) correctly unmounts between tests. Without it, multiple `render()` calls across tests accumulated stale DOM trees, causing "multiple elements found" errors in `screen.getByRole` queries. The integration config already used `globals: true`.
+- **Integration test parallelism disabled:** `vitest.integration.config.ts` now uses `fileParallelism: false` and `pool: "forks"` to prevent database deadlocks when both `seed.test.ts` and `geo-snapshot.test.ts` truncate tables concurrently against the same Supabase project.
+- **Fetch error-handling pattern (established here; reference by later units):** The GeographicPicker models two user-visible states beyond success: a loading state ("A carregar...") and a fetch-failure state. On failure, an `error` boolean is set (not a raw error object — just a flag that the request failed). The view shows a non-technical Portuguese message ("Não foi possível carregar os dados") and an outline-style "Tentar novamente" button that calls the same `loadSnapshot` function again, clearing the error flag first. Key pattern rules for later units to follow:
+  1. Use a single `error` boolean for fetch failures, not an error-message string or thrown object — the UI only needs to know "did it fail," not why (there's nothing actionable for the user about a 404 vs a timeout).
+  2. Error copy follows `ui-context.md` Invariant: "Never blame the user or the network for failures." — no "Erro de rede" or "Falha na conexão," just "Não foi possível carregar os dados" + an actionable retry.
+  3. Retry calls the same load function, never inline logic — this guarantees the initial load and retry follow identical paths.
+  4. The retry button uses the `outline` variant (secondary action), not the primary `default` variant, to distinguish it from the flow's main "Ver abrigos" action.
 
 ## Session Notes
 
 - All checklist items for spec 001 are green: `npm run build`, `npm run test`, `npm run test:e2e`, and `npm run lint` pass.
 - All checklist items for spec 002 are green: migration clean, seed produces correct hierarchy (Cidade de Maputo and Província de Maputo as separate Provincia rows, Matola/Boane as Distrito under Província de Maputo), 21 integration tests pass, build and lint clean.
+- All checklist items for spec 003 are green: geo-snapshot integration tests (8 passed), GeographicPicker component tests (12 passed including 3 error-handling tests), Playwright e2e test (1 passed), build and lint clean.
+- CodeRabbit fix 1: Added `orderBy: { name: 'asc' }` to distritos, bairros, and quarteiroes nested Prisma queries in `scripts/generate-geo-snapshot.ts` so the snapshot is deterministic.
+- CodeRabbit fix 2: The GeographicPicker fetch now sets an `error` boolean on failure, renders a Portuguese error message ("Não foi possível carregar os dados") and an outline "Tentar novamente" retry button that re-calls the same `loadSnapshot` function. This establishes the app's first network-request error-handling pattern, documented in Architecture Decisions for later offline-related units to reference. Three new component tests verify the error state, retry button presence, and successful recovery after retry.
+- The geo-snapshot generation script (`scripts/generate-geo-snapshot.ts`) writes to `public/geo-snapshot.json` and is exposed as `npm run generate:geo-snapshot`. It should be re-run whenever seed data changes.
+- The `/explorar` route is statically prerendered; the GeographicPicker component loads the snapshot at runtime via `fetch("/geo-snapshot.json")` on the client.
+- The GeographicPicker uses native `<select>` elements styled per `ui-context.md` tokens (rounded-[10px], border-border-default, bg-surface, focus-visible:ring-accent-brand), not @base-ui/react/select.
+- Page is a Server Component; only GeographicPicker is `"use client"`. The page lives under `app/(public)/explorar/` per the architecture's route group convention.
+- `vitest.config.ts` had `globals: true` added to fix RTL cleanup between tests — without it, `@testing-library/react` couldn't find a global `afterEach` and never unmounted between renders.
+- `vitest.integration.config.ts` had `fileParallelism: false` and `pool: "forks"` added to prevent concurrent database truncation deadlocks between seed and geo-snapshot tests.
 - Integration tests use a separate vitest config (`vitest.integration.config.ts`) with `node` environment and run via `npm run test:integration`. The main `vitest.config.ts` excludes `tests/integration/`.
 - The seed script is data-driven (arrays/loops per the spec's Design section), not hand-repeated blocks.
 - Prisma generated client output is at `lib/generated/prisma/client.ts` (Prisma 7.x changed the output structure from a re-exporting `index.ts` to direct `client.ts`).
