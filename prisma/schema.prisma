@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CapacityStatus {
+  AVAILABLE
+  NEARLY_FULL
+  FULL
+}
+
+enum ShelterTier {
+  OFFICIAL
+  COMMUNITY
+}
+
+enum UserRole {
+  CITIZEN
+  ADMIN
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+}
+
+model Provincia {
+  id        String    @id @default(uuid())
+  name      String
+  distritos Distrito[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Distrito {
+  id         String    @id @default(uuid())
+  name       String
+  provincia  Provincia @relation(fields: [provinciaId], references: [id])
+  provinciaId String
+  bairros    Bairro[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Bairro {
+  id             String           @id @default(uuid())
+  name           String
+  distrito       Distrito         @relation(fields: [distritoId], references: [id])
+  distritoId     String
+  quarteiroes    Quarteirao[]
+  vizinhoA       BairroVizinho[]  @relation("bairroA")
+  vizinhoB       BairroVizinho[]  @relation("bairroB")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model Quarteirao {
+  id         String    @id @default(uuid())
+  name       String
+  bairro     Bairro    @relation(fields: [bairroId], references: [id])
+  bairroId   String
+  shelters   Shelter[]
+  users      User[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model BairroVizinho {
+  bairroAId String
+  bairroBId String
+  bairroA   Bairro @relation("bairroA", fields: [bairroAId], references: [id])
+  bairroB   Bairro @relation("bairroB", fields: [bairroBId], references: [id])
+
+  @@id([bairroAId, bairroBId])
+}
+
+model Shelter {
+  id              String        @id @default(uuid())
+  name            String
+  tier            ShelterTier
+  capacityStatus  CapacityStatus
+  routeDescription String
+  latitude        Float?
+  longitude       Float?
+  photoUrl        String?
+  uploadedBy      User?         @relation(fields: [uploadedById], references: [id])
+  uploadedById    String?
+  quarteirao      Quarteirao    @relation(fields: [quarteiraoId], references: [id])
+  quarteiraoId    String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model User {
+  id                 String             @id @default(uuid())
+  name               String
+  phone              String?            @unique
+  email              String?            @unique
+  role               UserRole
+  verificationStatus VerificationStatus
+  homeQuarteirao     Quarteirao?        @relation(fields: [homeQuarteiraoId], references: [id])
+  homeQuarteiraoId   String?
+  shelters           Shelter[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+}

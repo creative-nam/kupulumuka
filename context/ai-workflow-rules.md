@@ -54,11 +54,11 @@ If something is broken and the fix isn't obvious from the current spec, don't wa
 
 ## 8. Review Loop
 
-Treat each completed unit as a pull request, even if there's no formal PR process yet:
+CodeRabbit is installed on this repo and reviews changes automatically. Treat each completed unit as a pull request:
 
 1. Implement against the spec.
 2. Self-check against the success checklist line by line before declaring done.
-3. If a review tool (e.g. CodeRabbit) flags something, or the human reviewer does, don't silently patch it — re-read the original spec, apply the specific correction, and update `progress-tracker.md` to note the correction was made and why.
+3. If CodeRabbit or the human reviewer flags something, don't silently patch it — re-read the original spec, apply the specific correction, and update `progress-tracker.md` to note the correction was made and why.
 
 ## 9. Never Invent Product Decisions
 
@@ -80,4 +80,3 @@ Before starting a unit, check whether it actually combines multiple units. Split
 - Behavior that isn't clearly defined in a feature spec — write/clarify the spec first, rather than resolving the gap inline while coding
 
 If a change can't be verified end to end in one sitting, the scope is too broad — split it into smaller specs rather than pushing through.
-
