@@ -1,29 +1,54 @@
 // @vitest-environment node
+import "dotenv/config";
+import { execSync } from "node:child_process";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { runSeed } from "@/prisma/seed";
 
-// In CI, use "test_seed" schema. For local dev, reuse "public".
-const TEST_SCHEMA = "public";
+const dbUrl = process.env["TEST_DIRECT_URL"];
+if (!dbUrl) throw new Error("TEST_DIRECT_URL is not set");
 
-function getTestUrl(): string {
-  const base = process.env["DIRECT_URL"];
-  if (!base) throw new Error("DIRECT_URL is not set");
-  const url = new URL(base);
-  url.searchParams.set("schema", TEST_SCHEMA);
-  return url.toString();
-}
-
-async function createTestClient() {
-  const url = getTestUrl();
-  const adapter = new PrismaPg({ connectionString: url });
+async function createClient() {
+  const adapter = new PrismaPg({ connectionString: dbUrl });
   return new PrismaClient({ adapter });
 }
 
 let prisma: PrismaClient;
 
 beforeAll(async () => {
-  prisma = await createTestClient();
+  // Deploy migrations to the test database
+  execSync("npx prisma migrate deploy", {
+    env: { ...process.env, DIRECT_URL: dbUrl },
+    stdio: "inherit",
+  });
+
+  prisma = await createClient();
+
+  // Truncate all tables in dependency order for a clean slate
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "BairroVizinho" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Shelter" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Quarteirao" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Bairro" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Distrito" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Provincia" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "User" CASCADE`);
+
+  await runSeed(prisma);
+});
+
+afterAll(async () => {
+  if (!prisma) return;
+
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "BairroVizinho" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Shelter" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Quarteirao" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Bairro" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Distrito" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Provincia" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "User" CASCADE`);
+
+  await prisma.$disconnect();
 });
 
 describe("Seed data integration", () => {
@@ -85,7 +110,7 @@ describe("Seed data integration", () => {
 
   it("seeds the three mockup shelters under Khongolote", async () => {
     const khongolote = await prisma.bairro.findFirst({
-      where: { name: "Khongolote" },
+      where: { name: "Khongolote", distrito: { provincia: { name: "Província de Maputo" } } },
       include: {
         quarteiroes: {
           include: { shelters: true },
@@ -132,10 +157,9 @@ describe("Seed data integration", () => {
   });
 
   it("has Shelter.routeDescription as a required (non-nullable) column", async () => {
-    // Query the information schema to check the column constraint
     const result = await prisma.$queryRaw<
       { is_nullable: string }[]
-    >`SELECT is_nullable FROM information_schema.columns WHERE table_name = 'Shelter' AND column_name = 'routeDescription'`;
+    >`SELECT is_nullable FROM information_schema.columns WHERE table_name = 'Shelter' AND column_name = 'routeDescription' AND table_schema = 'public'`;
     expect(result.length).toBe(1);
     expect(result[0].is_nullable).toBe("NO");
   });
@@ -151,52 +175,158 @@ describe("Seed data integration", () => {
     expect(foundStatuses).toContain("FULL");
   });
 
-  it("has BairroVizinho adjacency in at least two different provinces", async () => {
-    const vizinhos = await prisma.bairroVizinho.findMany({
-      include: {
-        bairroA: { include: { distrito: true } },
-        bairroB: { include: { distrito: true } },
-      },
-    });
-    expect(vizinhos.length).toBeGreaterThanOrEqual(2);
-
-    // Collect unique province names from the adjacency pairs
-    const provincesWithAdjacency = new Set(
-      vizinhos.map((v) => v.bairroA.distrito.provinciaId),
-    );
-    expect(provincesWithAdjacency.size).toBeGreaterThanOrEqual(2);
+  it("creates all 26 declared BairroVizinho adjacency pairs", async () => {
+    const count = await prisma.bairroVizinho.count();
+    // 6 (Cidade Maputo) + 6 (Matola) + 2 (Boane) + 6 (Beira) + 6 (Chókwè)
+    expect(count).toBe(26);
   });
 
-  it("resolves BairroVizinho correctly for at least two different pairs in two different provinces", async () => {
+  it("has adjacency pairs in all 4 provinces", async () => {
     const vizinhos = await prisma.bairroVizinho.findMany({
       include: {
         bairroA: {
           include: { distrito: { include: { provincia: true } } },
         },
-        bairroB: {
-          include: { distrito: { include: { provincia: true } } },
+      },
+    });
+    const provincesWithAdjacency = new Set(
+      vizinhos.map((v) => v.bairroA.distrito.provincia.name),
+    );
+    expect(provincesWithAdjacency).toEqual(
+      new Set(["Cidade de Maputo", "Província de Maputo", "Sofala", "Gaza"]),
+    );
+  });
+
+  it("has no self-referencing BairroVizinho pairs", async () => {
+    const vizinhos = await prisma.bairroVizinho.findMany();
+    const selfRefs = vizinhos.filter((v) => v.bairroAId === v.bairroBId);
+    expect(selfRefs.length).toBe(0);
+  });
+
+  it("resolves specific known BairroVizinho pairs in multiple provinces", async () => {
+    // Cidade de Maputo: Central → Alto Maé
+    const central = await prisma.bairro.findFirst({
+      where: { name: "Central", distrito: { provincia: { name: "Cidade de Maputo" } } },
+    });
+    const altoMae = await prisma.bairro.findFirst({
+      where: { name: "Alto Maé", distrito: { provincia: { name: "Cidade de Maputo" } } },
+    });
+    const pairCentralAltoMae = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: central!.id,
+          bairroBId: altoMae!.id,
         },
       },
     });
+    expect(pairCentralAltoMae).not.toBeNull();
 
-    // Find pairs from different provinces
-    const provinces = new Set(
-      vizinhos.map((v) => v.bairroA.distrito.provincia.name),
-    );
-    expect(provinces.size).toBeGreaterThanOrEqual(2);
+    // Província de Maputo (Matola): Khongolote → T-3
+    const khongolote = await prisma.bairro.findFirst({
+      where: { name: "Khongolote", distrito: { provincia: { name: "Província de Maputo" } } },
+    });
+    const t3 = await prisma.bairro.findFirst({
+      where: { name: "T-3", distrito: { provincia: { name: "Província de Maputo" } } },
+    });
+    const pairKhongoloteT3 = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: khongolote!.id,
+          bairroBId: t3!.id,
+        },
+      },
+    });
+    expect(pairKhongoloteT3).not.toBeNull();
 
-    // Verify at least one pair in each of two provinces by querying the reverse direction
-    const provinciaNames = Array.from(provinces).slice(0, 2);
-    for (const name of provinciaNames) {
-      const pairsInProvince = vizinhos.filter(
-        (v) => v.bairroA.distrito.provincia.name === name,
-      );
-      expect(pairsInProvince.length).toBeGreaterThanOrEqual(1);
+    // Sofala: Ponta-Gêa → Matacuane
+    const pontaGea = await prisma.bairro.findFirst({
+      where: { name: "Ponta-Gêa", distrito: { provincia: { name: "Sofala" } } },
+    });
+    const matacuane = await prisma.bairro.findFirst({
+      where: { name: "Matacuane", distrito: { provincia: { name: "Sofala" } } },
+    });
+    const pairPontaGeaMatacuane = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: pontaGea!.id,
+          bairroBId: matacuane!.id,
+        },
+      },
+    });
+    expect(pairPontaGeaMatacuane).not.toBeNull();
 
-      // Verify adjacency resolves correctly (bairros are different)
-      const pair = pairsInProvince[0];
-      expect(pair.bairroA.name).not.toBe(pair.bairroB.name);
-    }
+    // Gaza: Chókwè Sede → Lionde
+    const chokweSede = await prisma.bairro.findFirst({
+      where: { name: "Chókwè Sede", distrito: { provincia: { name: "Gaza" } } },
+    });
+    const lionde = await prisma.bairro.findFirst({
+      where: { name: "Lionde", distrito: { provincia: { name: "Gaza" } } },
+    });
+    const pairChokweLionde = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: chokweSede!.id,
+          bairroBId: lionde!.id,
+        },
+      },
+    });
+    expect(pairChokweLionde).not.toBeNull();
+  });
+
+  it("resolves both directions for a bidirectional adjacency pair", async () => {
+    const central = await prisma.bairro.findFirst({
+      where: { name: "Central", distrito: { provincia: { name: "Cidade de Maputo" } } },
+    });
+    const altoMae = await prisma.bairro.findFirst({
+      where: { name: "Alto Maé", distrito: { provincia: { name: "Cidade de Maputo" } } },
+    });
+
+    const forward = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: central!.id,
+          bairroBId: altoMae!.id,
+        },
+      },
+    });
+    const reverse = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: altoMae!.id,
+          bairroBId: central!.id,
+        },
+      },
+    });
+    expect(forward).not.toBeNull();
+    expect(reverse).not.toBeNull();
+  });
+
+  it("resolves a second bidirectional pair in a different province", async () => {
+    const boaneSede = await prisma.bairro.findFirst({
+      where: { name: "Boane Sede", distrito: { provincia: { name: "Província de Maputo" } } },
+    });
+    const beluluane = await prisma.bairro.findFirst({
+      where: { name: "Beluluane", distrito: { provincia: { name: "Província de Maputo" } } },
+    });
+
+    const forward = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: boaneSede!.id,
+          bairroBId: beluluane!.id,
+        },
+      },
+    });
+    const reverse = await prisma.bairroVizinho.findUnique({
+      where: {
+        bairroAId_bairroBId: {
+          bairroAId: beluluane!.id,
+          bairroBId: boaneSede!.id,
+        },
+      },
+    });
+    expect(forward).not.toBeNull();
+    expect(reverse).not.toBeNull();
   });
 
   it("seeds institutional Users (verified, email-based) per province", async () => {
@@ -215,7 +345,6 @@ describe("Seed data integration", () => {
       where: { role: "CITIZEN" },
     });
     expect(citizens.length).toBe(4);
-    // All citizens have a phone; one (Carlos) also has an email to link to shelters
     const allHavePhone = citizens.every((u) => u.phone !== null);
     expect(allHavePhone).toBe(true);
     const someHaveNullEmail = citizens.some((u) => u.email === null);
@@ -239,8 +368,4 @@ describe("Seed data integration", () => {
     const tiers = shelters.map((s) => s.tier);
     expect(tiers).toEqual(expect.arrayContaining(["OFFICIAL", "COMMUNITY"]));
   });
-});
-
-afterAll(async () => {
-  if (prisma) await prisma.$disconnect();
 });

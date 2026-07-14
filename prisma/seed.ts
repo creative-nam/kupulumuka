@@ -1,9 +1,6 @@
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: process.env["DIRECT_URL"] });
-const prisma = new PrismaClient({ adapter });
-
 type ProvinciaSeed = {
   name: string;
   distritos: {
@@ -376,10 +373,10 @@ const data: ProvinciaSeed[] = [
   },
 ];
 
-async function main() {
+export async function runSeed(prisma: PrismaClient) {
   console.log("Starting seed...");
 
-  await createUsers();
+  await createUsers(prisma);
 
   for (const provincia of data) {
     const createdProvincia = await prisma.provincia.create({
@@ -395,6 +392,13 @@ async function main() {
         },
       });
       console.log(`  Distrito: ${createdDistrito.name}`);
+
+      // Phase 1: Create all bairros (and their quarteiroes/shelters), collect IDs
+      const bairroInfos: {
+        id: string;
+        name: string;
+        vizinhos: string[];
+      }[] = [];
 
       for (const bairro of distrito.bairros) {
         const createdBairro = await prisma.bairro.create({
@@ -441,26 +445,29 @@ async function main() {
           });
         }
 
-        if (bairro.vizinhos.length > 0) {
-          for (const vizinhoName of bairro.vizinhos) {
-            const existingVizinho = await prisma.bairro.findFirst({
-              where: { name: vizinhoName, distritoId: createdDistrito.id },
-            });
+        bairroInfos.push({
+          id: createdBairro.id,
+          name: bairro.name,
+          vizinhos: bairro.vizinhos,
+        });
+      }
 
-            if (existingVizinho) {
-              await prisma.bairroVizinho
-                .create({
-                  data: {
-                    bairroAId: createdBairro.id,
-                    bairroBId: existingVizinho.id,
-                  },
-                })
-                .catch(() => {
-                  // pair may already exist
-                });
-            }
+      // Phase 2: Create all BairroVizinho pairs (all bairros now exist)
+      const bairroIdByName = new Map(bairroInfos.map((b) => [b.name, b.id]));
+
+      const pairs: { bairroAId: string; bairroBId: string }[] = [];
+
+      for (const bairroInfo of bairroInfos) {
+        for (const vizinhoName of bairroInfo.vizinhos) {
+          const vizinhoId = bairroIdByName.get(vizinhoName);
+          if (vizinhoId) {
+            pairs.push({ bairroAId: bairroInfo.id, bairroBId: vizinhoId });
           }
         }
+      }
+
+      if (pairs.length > 0) {
+        await prisma.bairroVizinho.createMany({ data: pairs, skipDuplicates: true });
       }
     }
   }
@@ -475,7 +482,7 @@ async function main() {
   console.log(`Users: ${await prisma.user.count()}`);
 }
 
-async function createUsers() {
+async function createUsers(prisma: PrismaClient) {
   const institutionalUsers = [
     {
       name: "Maria João",
@@ -567,11 +574,20 @@ async function createUsers() {
   }
 }
 
-main()
-  .then(() => {
-    process.exit(0);
-  })
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+async function main() {
+  const adapter = new PrismaPg({ connectionString: process.env["DIRECT_URL"] });
+  const prisma = new PrismaClient({ adapter });
+  await runSeed(prisma);
+  await prisma.$disconnect();
+}
+
+if (process.argv[1]?.endsWith("prisma/seed.ts")) {
+  main()
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}
