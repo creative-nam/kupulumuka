@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
 
@@ -109,7 +110,13 @@ export function GeographicPicker() {
     });
   }, []);
 
+  const router = useRouter();
   const isComplete = selection.quarteirao !== null;
+
+  const handleVerAbrigos = React.useCallback(() => {
+    if (!selection.quarteirao) return;
+    router.push(`/abrigos?quarteiraoId=${encodeURIComponent(selection.quarteirao.id)}`);
+  }, [router, selection.quarteirao]);
 
   if (error) {
     return (
@@ -175,7 +182,7 @@ export function GeographicPicker() {
         />
       </div>
 
-      <Button disabled={!isComplete} className="w-full">
+      <Button disabled={!isComplete} className="w-full" onClick={handleVerAbrigos}>
         Ver abrigos
       </Button>
     </div>

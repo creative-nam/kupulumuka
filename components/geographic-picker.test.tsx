@@ -4,6 +4,13 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { GeographicPicker } from "./geographic-picker";
 
+const mockPush = vi.fn();
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+  usePathname: () => "/explorar",
+}));
+
 const mockSnapshot = {
   provincias: [
     {
@@ -305,5 +312,23 @@ describe("GeographicPicker", () => {
     expect(
       screen.getByRole("button", { name: /ver abrigos/i }),
     ).not.toBeDisabled();
+  });
+
+  it("navigates to /abrigos with the selected quarteiraoId when Ver abrigos is clicked", async () => {
+    const user = userEvent.setup();
+    render(<GeographicPicker />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Província")).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText("Província"), "p1");
+    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
+    await user.selectOptions(screen.getByLabelText("Bairro"), "b1");
+    await user.selectOptions(screen.getByLabelText("Quarteirão"), "q1");
+
+    await user.click(screen.getByRole("button", { name: /ver abrigos/i }));
+
+    expect(mockPush).toHaveBeenCalledWith("/abrigos?quarteiraoId=q1");
   });
 });

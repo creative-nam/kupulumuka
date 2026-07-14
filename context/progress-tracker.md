@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 — Core citizen value (unit 1.1 complete)
+- Phase 1 — Core citizen value (units 1.1 and 1.2 complete)
 
 ## Current Goal
 
-- Next up: **1.2 Shelter search & results** — Tier 1 before Tier 2, capacity status pill, landmark route description.
+- Next up: **1.3 Offline support** (not yet spec'd) or **Phase 2** shelter contribution — choose based on roadmap priority.
 
 ## Completed
 
@@ -19,13 +19,7 @@ change.
 
 - **1.1 Geographic picker** (`feature-specs/003-geographic-picker.md`) — A cascading Província → Distrito → Bairro → Quarteirão selection page at `/explorar`. A build-time script (`scripts/generate-geo-snapshot.ts`) queries the seeded database via Prisma and writes a static nested-tree JSON to `public/geo-snapshot.json`. The GeographicPicker Client Component loads this snapshot once via `fetch` and does all cascading filtering in-memory — zero additional network requests after the initial load. Four styled native `<select>` elements (Província, Distrito, Bairro, Quarteirão) are each disabled until its parent is chosen; changing an earlier selection resets everything below. A "Ver abrigos" primary button is disabled until all four levels are selected. The page is a Server Component; only the interactive picker is `"use client"`. All labels and placeholders are in Portuguese. Snapshot verified by integration test (8 tests), cascading behavior verified by component tests (9 tests), full click-through verified by Playwright e2e test (1 test).
 
-## In Progress
-
-- None.
-
-## Next Up
-
-- **1.2 Shelter search & results** — The screen from the approved mockup: Tier 1 before Tier 2, capacity status pill, landmark route description. Depends on 1.1 for the geographic picker.
+- **1.2 Shelter search & results** (`feature-specs/004-shelter-search-results.md`) — A Server Component results page at `/abrigos` reads `quarteiraoId` from `searchParams`, calls `getSheltersForQuarteirao(quarteiraoId)` from `lib/shelters/search.ts` (independently testable, with optional `PrismaClient` parameter for testability), and renders shelter cards per the approved mockup: tier badge (Oficial/Comunitário with inline SVG icons), capacity pill (Livre/Quase cheio/Esgotado with functional color tokens), landmark route description, and a share button. Sort order is an explicit contract: tier ascending (OFFICIAL before COMMUNITY), then capacity severity ascending (AVAILABLE before NEARLY_FULL before FULL), then name alphabetically. Overflow to neighboring bairros triggers only when the selected quarteirão's bairro has zero shelters, with results flagged (`fromNeighboringBairro: true`) and a "Mostrar abrigos de bairros vizinhos" banner. Empty state ("Nenhum abrigo encontrado nesta zona") avoids promising shelter-registration (out of scope). The share button is the only Client Component on the page, using `navigator.share()` falling back to clipboard copy with a "Link copiado" confirmation. Unit 1.1's "Ver abrigos" button was wired to navigate to `/abrigos?quarteiraoId=...` via `useRouter().push()`. Written test-first: 7 integration tests for sort order and overflow behavior, plus 4 component tests for the share button.
 
 ## Open Questions
 
@@ -46,7 +40,12 @@ change.
   1. Use a single `error` boolean for fetch failures, not an error-message string or thrown object — the UI only needs to know "did it fail," not why (there's nothing actionable for the user about a 404 vs a timeout).
   2. Error copy follows `ui-context.md` Invariant: "Never blame the user or the network for failures." — no "Erro de rede" or "Falha na conexão," just "Não foi possível carregar os dados" + an actionable retry.
   3. Retry calls the same load function, never inline logic — this guarantees the initial load and retry follow identical paths.
-  4. The retry button uses the `outline` variant (secondary action), not the primary `default` variant, to distinguish it from the flow's main "Ver abrigos" action.
+   4. The retry button uses the `outline` variant (secondary action), not the primary `default` variant, to distinguish it from the flow's main "Ver abrigos" action.
+
+- **`getSheltersForQuarteirao` accepts optional `PrismaClient` parameter:** The function defaults to the global singleton `prisma` from `lib/db/prisma-client.ts`, but callers (primarily integration tests using `TEST_DIRECT_URL`) can pass a different client instance. This follows the same pattern as `runSeed(prisma)` in `prisma/seed.ts`, and is the recommended pattern for any future `lib/` function that queries the database — always default to the global client but accept an injected one for testability.
+- **Share button check uses `typeof navigator.share === "function"`, not `"share" in navigator:`** The `"share" in navigator` check passes even when `navigator.share` is `undefined` (since the property exists), causing the code to call `undefined()` and throw into the catch handler, which then returns without clipboard fallback. Check that `navigator.share` is actually a function before calling it.
+- **Integration test files colocated in `lib/` need exclusion from unit test runner:** `vitest.config.ts` (unit tests) must explicitly exclude `lib/shelters/**/*.test.ts` (or similar patterns) because those tests require the node environment and test database — jsdom won't work. Add the exclusion pattern alongside `tests/integration/`.
+- **No icon library dependency — inline SVGs used instead:** The mockup references `ti-` (Tabler Icons) but no icon library is installed in `package.json`. Tier badge icons (checkmark for Oficial, users for Comunitário) and the share icon are rendered as minimal inline SVGs. If Tabler Icons are installed later, these should be swapped for the corresponding `@tabler/icons-react` components — the SVGs are small enough that the migration is mechanical.
 
 ## Session Notes
 
@@ -69,3 +68,4 @@ change.
 - **CodeRabbit fix — BairroVizinho createMany:** Swallowed `.catch(() => {})` around per-pair `bairroVizinho.create` replaced with a single `createMany({ skipDuplicates: true })` call that collects all pairs first, then creates them in one batch. This eliminates silent error suppression and improves performance.
 - **CodeRabbit fix — Province-scoped bairro lookups:** All `findFirst` bairro lookups in integration tests now filter by `distrito: { provincia: { name } }` instead of bare name, ensuring correctness if duplicate bairro names ever exist across provinces.
 - **CodeRabbit fix — Test database isolation via separate Supabase project:** The truncate-based test isolation previously targeted whatever `DIRECT_URL` was configured, risking real dev data. A second dedicated Supabase project was set up and its connection string is exposed as `TEST_DIRECT_URL` / `TEST_DATABASE_URL` in `.env` / `.env.example`. The integration test now reads `TEST_DIRECT_URL` and runs `prisma migrate deploy` against it in `beforeAll` before the truncate/seed flow, ensuring the test schema is always up to date. The original disposable-schema approach from spec 002 didn't work with the `PrismaPg` adapter (which ignores `?schema=` in the connection string), so test isolation is now a separate project rather than a separate schema.
+- All checklist items for spec 004 are green: `getSheltersForQuarteirao` returns shelters in exact sort order (tier → capacity severity → name) verified by 7 integration tests, overflow to neighboring bairros only triggers when local bairro has zero shelters with results flagged (`fromNeighboringBairro`), 1.1's "Ver abrigos" button navigates to `/abrigos?quarteiraoId=...` (verified by updated component test), rendered shelter cards match `ui-context.md` tokens (tier badge with inline SVG icon, capacity pill with text label, route description, share icon), empty-state and "showing nearby results" copy is in Portuguese without shelter-registration references, share button works via `navigator.share()` with clipboard fallback tested (4 component tests), e2e test confirms correct results for Khongolote (Província de Maputo, 3 shelters) and Ponta-Gêa (Sofala, 1 shelter) — two different provinces, the results page (`/abrigos`) is a Server Component (only `ShareButton` is `"use client"`), `npm run build` and `npm run lint` pass clean.
