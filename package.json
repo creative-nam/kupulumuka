@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "generate:geo-snapshot": "npx tsx scripts/generate-geo-snapshot.ts"
+    "generate:geo-snapshot": "npx tsx scripts/generate-geo-snapshot.ts",
+    "generate:shelters-snapshot": "npx tsx scripts/generate-shelters-snapshot.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
