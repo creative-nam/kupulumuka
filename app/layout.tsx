@@ -3,6 +3,7 @@ import { Fraunces } from "next/font/google";
 
 import { ThemeScript } from "@/components/theme-script";
 import { SyncOnLoad } from "@/components/sync-on-load";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 import "./globals.css";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
       <body className={`${fraunces.variable} antialiased`}>
         <ThemeScript />
         <SyncOnLoad />
+        <ServiceWorkerRegister />
         {children}
       </body>
     </html>

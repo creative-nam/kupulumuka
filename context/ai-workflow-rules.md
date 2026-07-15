@@ -28,6 +28,8 @@ For every feature spec, follow this order and do not skip steps:
 
 If a checklist item can't be turned into a test (e.g. a subjective visual judgment), flag this explicitly rather than silently skipping it — either the checklist item needs rewording into something testable, or it's legitimately a manual-review item and should be marked as such in the spec.
 
+**A checklist item involving an e2e or integration test is not "done" on the basis of a summary claim alone.** Unit 1.2's shelter-search e2e checklist item was reported and closed as passing when it never actually had — the test's locator was ambiguous from the commit that introduced it, and nothing caught this until it was investigated for an unrelated reason two units later. Report the actual test run output (pass/fail counts, test names) for any e2e or integration checklist item, not just a restated version of the checklist ("confirmed by e2e test" is not evidence; `8 passed, 0 failed` with the relevant test names is). If something can't produce real output to show, that's itself worth flagging rather than working around.
+
 ## 4. System Invariants Are Non-Negotiable
 
 The seven invariants in `architecture.md` override any individual feature spec if they ever conflict. If a spec's instructions seem to require breaking one (e.g. a spec that implies gating capacity updates on verification status), stop and flag the conflict rather than implementing it — this almost always means the spec was written wrong, not that the invariant should bend.

@@ -16,6 +16,8 @@ Make the app usable from a genuinely cold start with zero network — tab closed
 
 **Workbox precache list:** the app shell's JS/CSS bundles, the self-hosted Fraunces font files, `geo-snapshot.json`, `shelters-snapshot.json`. Runtime caching for the snapshots uses `StaleWhileRevalidate` — serve the cached copy instantly, refresh in the background when online, rather than a strategy that never checks for updates once cached.
 
+**Adjacency data is explicitly not part of this precache list.** Per unit 006's actual implementation, `BairroVizinho` adjacency pairs are served via `/api/adjacency` (a dynamic Prisma-backed route, not a static file) and cached into Dexie by 006's own sync mechanism — a separate layer from Workbox entirely. Don't attempt to add `/api/adjacency` to the Workbox precache list; a dynamic API route has no fixed content to precache, and Dexie already holds whatever was last synced. This unit's job stops at making the static shell/assets available offline; the app's own data-layer fallback (built in 006) handles the rest.
+
 **Cold-start verification is the actual point of this unit** — a passing build with next-pwa configured doesn't prove precaching works; the service worker's precache manifest needs to be confirmed via devtools' Application panel, and behavior needs to be proven with a real cold-start test (sync online once, fully close and reopen in a new offline context, confirm the shell loads and 006's fallback path renders real data from the previously-synced cache).
 
 ## Implementation Steps

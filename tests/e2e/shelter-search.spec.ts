@@ -11,11 +11,11 @@ test.describe("Shelter search and results", () => {
     // Província de Maputo (index 3, after placeholder, Cidade de Maputo, Gaza)
     await page.getByLabel("Província").selectOption({ index: 3 });
 
-    // Matola (index 2, after placeholder and Boane)
-    await page.getByLabel("Distrito").selectOption({ index: 2 });
+    // Matola (index 1, first distrito after placeholder)
+    await page.getByLabel("Distrito").selectOption({ index: 1 });
 
-    // Khongolote (index 2, after placeholder and Fomento)
-    await page.getByLabel("Bairro").selectOption({ index: 2 });
+    // Khongolote (index 1, first bairro after placeholder)
+    await page.getByLabel("Bairro").selectOption({ index: 1 });
 
     // Quarteirão 12 (index 1, first quarteirão after placeholder)
     await page.getByLabel("Quarteirão").selectOption({ index: 1 });
@@ -27,7 +27,7 @@ test.describe("Shelter search and results", () => {
     await expect(page).toHaveURL(/\/abrigos\?quarteiraoId=/);
 
     // Back nav should show Khongolote context
-    await expect(page.getByText("Khongolote")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Khongolote/ })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Abrigos disponíveis")).toBeVisible();
 
     // Should have 3 shelter cards in correct order
@@ -75,7 +75,7 @@ test.describe("Shelter search and results", () => {
     await expect(page).toHaveURL(/\/abrigos\?quarteiraoId=/);
 
     // Back nav should show Ponta-Gêa context
-    await expect(page.getByText("Ponta-Gêa")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Ponta-Gêa/ })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Abrigos disponíveis")).toBeVisible();
 
     // Should show one shelter

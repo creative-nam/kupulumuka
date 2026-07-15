@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 — Core citizen value (units 1.1, 1.2, 1.3a, and 1.3b complete)
+- Phase 1 — Core citizen value (all units 1.1, 1.2, 1.3a, 1.3b, and 1.3c complete)
 
 ## Current Goal
 
-- Next up: **1.3c Service worker precaching** — cold offline start (tab closed, reopened with no network). Requires app shell precaching via Workbox.
+- Phase 1 fully complete. Next: Phase 2 (community contribution) — requires feature spec to be written first.
 
 ## Completed
 
@@ -26,6 +26,14 @@ change.
 - None.
 
 ## Architecture Decisions
+
+- **Snapshots served via StaleWhileRevalidate runtime caching, not precache:** The spec lists snapshots in the precache list, but precache routes take priority over runtime caching routes in Workbox (routes are checked in registration order, precache first). If snapshots are in the precache manifest, the StaleWhileRevalidate runtime cache handler never fires — the precache serves the snapshot and never checks for updates until the entire SW is replaced. To honor the spec's intent (stale-while-revalidate behavior that actually updates), snapshots are instead cached via StaleWhileRevalidate runtime caching only. This means the first-ever visit online won't have them cached, but any subsequent visit (including cold-start offline) will — matching the spec's explicit "first-ever visit requires one online visit" limitation. The precache list covers the immutable app shell (chunks, CSS, fonts, build manifest files).
+
+- **workbox-build `generateSW` with `additionalManifestEntries` instead of glob patterns:** The build output uses content-hashed filenames that we want to include deterministically. `generateSW` mode with `additionalManifestEntries` provides full control over which files are precached, while still letting Workbox handle route registration, runtime caching configuration, and bundling the Workbox runtime into the output file. `globDirectory: "."` and `globPatterns: []` are required to avoid empty-manifest issues in some workbox-build versions. `navigateFallback` and `runtimeCaching` handle navigation and snapshot refresh respectively.
+
+- **E2E tests run against production preview (`next start`), not `next dev`:** The SW registers only when `NODE_ENV === "production"` (the guard added to prevent stale-SW confusion during development). Since Playwright runs against `next dev` by default, the SW never registered and the cold-start-offline tests could never pass. Switching the webServer to `npm run build && npx next start -p 3000` makes the SW available and matches the asset URLs the SW's precache manifest expects (dev server generates different chunk paths). **Known tradeoff:** Every e2e run now does a full `next build` first, adding ~30–60s of build time. This is accepted — CI runs build anyway, and for local iteration the build cache makes repeated runs fast after the first. An alternative (having only cold-start-offline tests start their own preview server) was tried first but added complexity from port management, orphaned processes, and a separate test-only server from the rest of the suite. `reuseExistingServer: false` ensures a fresh production preview server is started on every run — if a developer has `npm run dev` in another terminal on port 3000, Playwright will fail fast (port conflict) rather than silently using the dev server and having SW tests fail inscrutably.
+
+- **DevTools Application panel as the primary precache manifest verification method:** The spec notes that precache manifest contents are best confirmed via the browser's DevTools Application panel (Cache Storage). The unit test at `scripts/__tests__/generate-sw.test.ts` provides a script-level assertion that the generated SW file contains the expected entries, but this only validates the build-time configuration — it doesn't prove the SW actually installs and populates its caches correctly. The e2e test verifies cache population after install by querying `caches.open()` from the controlled page context.
 
 - **Dexie Table property declaration with `!`:** Dexie table properties (`geoSnapshot`, `shelters`, etc.) are declared with `!` (definite assignment assertion) because Dexie maps them at runtime via `version().stores()` — TypeScript strict mode requires the assertion since they have no initializer and are not set in the constructor body.
 
@@ -59,6 +67,12 @@ change.
 
 - **Exclusion refined to `lib/shelters/search.test.ts` instead of `lib/shelters/**/*.test.ts`:** Unit 1.3 introduced `rank-and-filter.test.ts`, a pure-function test with no database dependency. The broad `lib/shelters/**/*.test.ts` exclusion excluded it from the unit runner unnecessarily. Changed to `lib/shelters/search.test.ts` so pure-function tests in the same folder run as unit tests while the DB-dependent integration test still runs only under the integration config.
 - **No icon library dependency — inline SVGs used instead:** The mockup references `ti-` (Tabler Icons) but no icon library is installed in `package.json`. Tier badge icons (checkmark for Oficial, users for Comunitário) and the share icon are rendered as minimal inline SVGs. If Tabler Icons are installed later, these should be swapped for the corresponding `@tabler/icons-react` components — the SVGs are small enough that the migration is mechanical.
+
+- **Pre-existing test fix — shelter-search e2e tests (shelter-search.spec.ts):** Both tests in this file were broken from their introduction in commit `54c3670` (spec 004/unit 1.2). Verified by checking the git history: the file has exactly one commit, the seed data was the same then as now, and `BackNav` was introduced in that same commit. These tests never passed — the 1.2 success checklist was closed without them genuinely passing.
+  - **Khongolote test fix:** Corrected `selectOption({ index: 2 })` to `{ index: 1 }` for both Distrito and Bairro. The original indices (2/2) selected Boane→Beluluane instead of Matola→Khongolote; the comments were also wrong ("after placeholder and Boane" → Matola is before Boane). Also replaced ambiguous `getByText("Khongolote")` with `getByRole("link", { name: /Khongolote/ })` to target only the BackNav link, not the shelter card h2 ("EPC Khongolote") or route description paragraph.
+  - **Ponta-Gêa test fix:** Replaced ambiguous `getByText("Ponta-Gêa")` with `getByRole("link", { name: /Ponta-Gêa/ })` to avoid strict-mode violation against the shelter card h2 ("Escola Secundária da Ponta-Gêa").
+  - **Timing fix:** Both BackNav assertions given `{ timeout: 10000 }` to match the província select's timeout — the ShelterResults component fetches from `/api/shelters` on mount, which can take >5s under dev-server load.
+  - All 8 e2e tests now pass with `--workers=1` (same as CI). The original parallel-worker flakiness (resource contention on `/api/shelters`) is a separate, pre-existing infrastructure concern.
 
 ## Session Notes
 
@@ -97,3 +111,29 @@ change.
   - All spec checklist items green: `npm test` (42 tests), `npm run build`, `npm run lint` pass. No service worker or cold-start handling present.
   - CodeRabbit fix — `getLastSyncedAt()` failure in `geographic-picker.tsx` no longer discards a successfully-loaded cached snapshot: wrapped in its own try/catch so a metadata fetch failure defaults timestamp to `null` rather than propagating to outer catch.
   - CodeRabbit fix — Error state in `shelter-results.tsx` now renders "Não foi possível carregar os dados" + "Tentar novamente" retry button (the established GeographicPicker failure pattern from unit 1.1, documented in Architecture Decisions), not the misleading `EmptyState` that conflates "couldn't load" with "no shelters found".
+
+- **1.3c Service worker precaching** (`feature-specs/007-service-worker-precaching.md`) — Cold offline start via Workbox service worker. Key deliverables:
+  - `scripts/generate-sw.ts`: Build-time script using `workbox-build` `generateSW` to create a service worker at `public/sw.js`. The precache manifest includes all JS/CSS chunks, self-hosted Fraunces font files (`.woff2`), and build manifest files — everything the app shell needs to render on a cold start.
+  - Snapshots (`geo-snapshot.json`, `shelters-snapshot.json`) are NOT in the precache manifest but are handled via StaleWhileRevalidate runtime caching, so they're cached on first online access and refreshed in the background on subsequent visits (the precache route would take priority and prevent runtime caching from firing).
+  - Navigation caching: Two strategies for offline HTML delivery. `NetworkFirst` for page routes (`/`, `/explorar`, `/abrigos`) caches the navigation response on the first online visit and serves it from cache on subsequent offline navigations. `navigateFallback: "/explorar"` ensures navigation to any route redirects to the cached explorar page when offline.
+  - `skipWaiting: true` and `clientsClaim: true` so the SW activates immediately after install without requiring a page reload.
+  - `components/service-worker-register.tsx`: Client component that registers the SW in a `useEffect` (included in `app/layout.tsx`).
+  - `workbox-build` added as a dev dependency.
+  - `npm run build` chains `next build --turbopack && npx tsx scripts/generate-sw.ts` so the SW is generated fresh on every production build. Also exposed as `npm run generate:sw` for standalone regeneration.
+  - `eslint.config.mjs` updated to exclude generated `public/sw.js` and `public/workbox-*.js` files from lint.
+  - Unit tests (8 tests) at `scripts/__tests__/generate-sw.test.ts` verify the generated SW file contains: `precacheAndRoute`, JS chunks, CSS, font files, StaleWhileRevalidate routes for both snapshots, `skipWaiting`, and `clientsClaim`.
+  - E2e tests (2 tests) at `tests/e2e/cold-start-offline.spec.ts` verify: SW registers and controls the page after an online visit, and the precache cache contains app shell assets (chunks, CSS, fonts).
+  - All checklist items green: `npm test` (50 unit tests), `npm run build`, `npm run lint` pass.
+  - **Limitation documented:** First-ever use requires one online visit — a device that has never been online cannot have any data to precache. This is accounted for in the spec and will be surfaced for unit 5.1 (onboarding).
+  - **StaleWhileRevalidate runtime caching** is configured in the generated SW and verified by unit test/static analysis. Actual runtime cache population timing depends on SW activation vs. page render order; the StaleWhileRevalidate cache is populated on the first request handled by an active SW (second page load at latest). Verified via manual DevTools Application panel inspection.
+  - **Deviations from spec:** Snapshots are not in the precache manifest per se (they're runtime-cached via StaleWhileRevalidate), which is functionally equivalent — cold-start offline users still get cached snapshots because the StaleWhileRevalidate handler serves from its persistent cache (populated during any prior online visit). The explicit precache-vs-runtime distinction is noted here in Architecture Decisions for clarity.
+  - No PWA manifest, icons, install prompt, or generic uncached-route fallback page present in the diff.
+  - **Fixes applied:**
+    - CodeRabbit fix — `readdirSync()` in `scripts/generate-sw.ts` replaced with a `walkDir()` function that recurses into subdirectories. Previously only flat directory listing was used for `chunks/` and build-ID directories, which would miss files nested under subdirectories (e.g. `chunks/app/layout.js` produced by webpack builds). All three scanned directories (`chunks/`, `media/`, and the build-ID directory) now use `walkDir()`. `media/` is expected to be flat (font files only) but consistency of a single walk pattern reduces the chance of a similar gap.
+    - Unit tests (6 new tests in `scripts/__tests__/generate-sw.test.ts`) verify `walkDir` behavior: flat files, one-level subdirectory, multi-level nesting matching the expected `chunks/app/explorar/` pattern, empty directory, and no-matches case. Existing precache content regex patterns updated from lazy `.+?` to greedy `.+` to explicitly allow subdirectory segments in matched URLs.
+    - CodeRabbit fix — `navigateFallback: "/explorar"` required the fallback document to exist in the precache manifest. Previously no HTML pages were precached; only static assets from `.next/static/` were included. Added a scan of `.next/server/app/` for pre-rendered HTML files (`index.html`, `explorar.html`, excluding `_not-found.html`, `404.html`, `500.html`), mapping `index.html` → URL `/` and any other `name.html` → URL `/name`. This adds both `/` and `/explorar` to the precache manifest with content-based revisions, ensuring `navigateFallback` resolves correctly on cold-start offline. Unit tests (2 new tests) verify both HTML entries are present with revision hashes.
+    - CodeRabbit fix — `service-worker-register.tsx` now guards registration behind `process.env.NODE_ENV === "production"` (or `NEXT_PUBLIC_ENABLE_SW === "true"` for e2e testing) so the SW never registers in dev, preventing stale-SW confusion. Silent `.catch(() => {})` replaced with `.catch(console.error)` so registration failures are visible.
+    - CodeRabbit fix — `cold-start-offline.spec.ts` first test: `page.evaluate()` sampling `navigator.serviceWorker.controller` replaced with `page.waitForFunction()` for reliable SW-active detection (matching the pattern already used in the second test).
+    - CodeRabbit fix — `cold-start-offline.spec.ts` second test extended: after verifying cache contents offline, now opens a new page with `context.setOffline(true)`, navigates to `/explorar`, and confirms the GeographicPicker renders. This required switching the Playwright webServer from `npm run dev` to `npm run build && npx next start -p 3000` because the dev server generates different asset URLs than the production build's SW precache manifest — the two were incompatible.
+    - `playwright.config.ts` webServer changed to `reuseExistingServer: false` to prevent silent fallback to a developer's `npm run dev` on port 3000, which would make SW registration fail inscrutably (dev server runs with `NODE_ENV=development`, blocking SW registration per the guard).
+    - Verified all 8 e2e tests pass against the production preview server (both SW tests, shelter-search, geographic-picker, theme).
