@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces } from "next/font/google";
 
 import { ThemeScript } from "@/components/theme-script";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { SyncOnLoad } from "@/components/sync-on-load";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
@@ -30,6 +31,9 @@ export default function RootLayout({
         <ThemeScript />
         <SyncOnLoad />
         <ServiceWorkerRegister />
+        <div className="fixed right-spacing-screen-x top-spacing-screen-x">
+          <ThemeToggle />
+        </div>
         {children}
       </body>
     </html>
