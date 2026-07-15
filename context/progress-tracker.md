@@ -5,11 +5,11 @@ change.
 
 ## Current Phase
 
-- Phase 1 — Core citizen value (units 1.1, 1.2, and 1.3a complete)
+- Phase 1 — Core citizen value (units 1.1, 1.2, 1.3a, and 1.3b complete)
 
 ## Current Goal
 
-- Next up: **1.3 Offline support** (not yet spec'd) or **Phase 2** shelter contribution — choose based on roadmap priority.
+- Next up: **1.3c Service worker precaching** — cold offline start (tab closed, reopened with no network). Requires app shell precaching via Workbox.
 
 ## Completed
 
@@ -26,6 +26,18 @@ change.
 - None.
 
 ## Architecture Decisions
+
+- **Dexie Table property declaration with `!`:** Dexie table properties (`geoSnapshot`, `shelters`, etc.) are declared with `!` (definite assignment assertion) because Dexie maps them at runtime via `version().stores()` — TypeScript strict mode requires the assertion since they have no initializer and are not set in the constructor body.
+
+- **`fake-indexeddb` for unit tests requiring Dexie:** jsdom doesn't implement IndexedDB. `fake-indexeddb/auto` patches `globalThis.indexedDB` so Dexie instances created in tests work fully in-memory. The `resetDb()` singleton pattern ensures isolation between tests.
+
+- **`getCachedShelters` cross-references Dexie tables for full rank-and-filter parity:** The cached path needs `quarteiraoName` and `bairroName` which aren't in the shelters snapshot. `getCachedShelters()` builds lookup maps from the geo snapshot (in Dexie) to hydrate these fields, ensuring `rankAndFilterShelters` receives the same `ShelterInput` shape as the live DB path.
+
+- **API routes as the sync/cache interface:** `sync.ts` fetches from `/geo-snapshot.json`, `/shelters-snapshot.json` (static files) and `/api/adjacency` (dynamic endpoint) rather than a single bulk endpoint. This reuses the existing snapshot generation scripts and keeps the adjacency data fresh from the DB without maintaining a separate snapshot file.
+
+- **Results page converted from Server Component to Client Component shell:** The `/abrigos` page was a pure Server Component (unit 1.2). For warm-offline fallback to work during client-side navigation, the rendering now happens in `ShelterResults` (client component) that tries the API first then falls back to Dexie. The page file remains a thin Server Component that validates `searchParams` before delegating.
+
+
 
 - **Tailwind v4 `@theme inline` instead of `tailwind.config`:** `create-next-app@15` ships Tailwind CSS v4, which maps design tokens via CSS `@theme` blocks rather than a separate `tailwind.config` file. All `ui-context.md` color, radius, and spacing tokens are defined as CSS custom properties in `app/globals.css` and referenced from `@theme inline` so Tailwind utilities and raw CSS stay in sync.
 - **Theme attribute:** Resolved theme is applied via `data-theme="light" | "dark"` on `<html>`, set by an inline bootstrap script (cookie → system preference → light) and updated by the client-side toggle. Cookie name: `theme`.
@@ -72,3 +84,17 @@ change.
 - **CodeRabbit fix — Test database isolation via separate Supabase project:** The truncate-based test isolation previously targeted whatever `DIRECT_URL` was configured, risking real dev data. A second dedicated Supabase project was set up and its connection string is exposed as `TEST_DIRECT_URL` / `TEST_DATABASE_URL` in `.env` / `.env.example`. The integration test now reads `TEST_DIRECT_URL` and runs `prisma migrate deploy` against it in `beforeAll` before the truncate/seed flow, ensuring the test schema is always up to date. The original disposable-schema approach from spec 002 didn't work with the `PrismaPg` adapter (which ignores `?schema=` in the connection string), so test isolation is now a separate project rather than a separate schema.
 - All checklist items for spec 004 are green: `getSheltersForQuarteirao` returns shelters in exact sort order (tier → capacity severity → name) verified by 7 integration tests, overflow to neighboring bairros only triggers when local bairro has zero shelters with results flagged (`fromNeighboringBairro`), 1.1's "Ver abrigos" button navigates to `/abrigos?quarteiraoId=...` (verified by updated component test), rendered shelter cards match `ui-context.md` tokens (tier badge with inline SVG icon, capacity pill with text label, route description, share icon), empty-state and "showing nearby results" copy is in Portuguese without shelter-registration references, share button works via `navigator.share()` with clipboard fallback tested (4 component tests), e2e test confirms correct results for Khongolote (Província de Maputo, 3 shelters) and Ponta-Gêa (Sofala, 1 shelter) — two different provinces, the results page (`/abrigos`) is a Server Component (only `ShareButton` is `"use client"`), `npm run build` and `npm run lint` pass clean.
 - **1.3a Shelters snapshot & shared ranking logic** (`feature-specs/005-shelters-snapshot-shared-ranking.md`) — `lib/shelters/rank-and-filter.ts` extracted as a pure function (no Prisma imports, no DB calls) operating on plain arrays, tested with 7 pure-function tests adapted from 1.2's sort/overflow cases. `getSheltersForQuarteirao` in `lib/shelters/search.ts` refactored to be a thin wrapper: fetch via Prisma, delegate to `rankAndFilterShelters`. Unit 1.2's original 7 integration tests pass completely unchanged after the refactor. `scripts/generate-shelters-snapshot.ts` (mirroring the geo-snapshot pattern) queries all shelters via Prisma and writes tier, capacity status, route description, quarteirão/bairro IDs to `public/shelters-snapshot.json`, verified by 5 integration tests against seeded data. Exposed as `npm run generate:shelters-snapshot`. `npm run build` and `npm run lint` pass clean. No Dexie, service worker, or UI/rendering changes present. Success checklist: all items green.
+
+- **1.3b Offline data sync & fallback rendering** (`feature-specs/006-offline-sync-fallback-rendering.md`) — Warm-offline support via Dexie (IndexedDB) caching and client-side fallback rendering. Key deliverables:
+  - `lib/offline/db.ts`: Dexie database with 4 tables (`geoSnapshot`, `shelters`, `adjacencyPairs`, `syncMeta`) and singleton accessor.
+  - `lib/offline/sync.ts`: `syncData()` fetches `geo-snapshot.json`, `shelters-snapshot.json`, and `/api/adjacency` on every online call; stores all three in Dexie with a `lastSyncedAt` timestamp; clears and refreshes on each sync (never skips). 6 unit tests.
+  - `lib/offline/query.ts`: `getCachedShelters()` reads from Dexie and runs through `rankAndFilterShelters` (unit 005's pure function) — same sort order, overflow behavior, and result shape as the live path.
+  - `app/api/adjacency/route.ts` and `app/api/shelters/route.ts`: API endpoints consumed by `sync.ts` and `ShelterResults`.
+  - `components/sync-on-load.tsx`: Calls `syncData()` on mount and registers `online` event listener for re-sync.
+  - `components/shelter-results.tsx`: Client component replacing the old server-only page; tries live fetch first, falls back to Dexie; shows cache-staleness banner ("Sem ligação — a mostrar dados guardados (última atualização: {timestamp})"). 7 component tests.
+  - `components/geographic-picker.tsx`: Extended to fall back to Dexie-cached geo snapshot when live fetch fails; shows staleness banner when serving cached data. 2 new tests (16 total).
+  - `app/(public)/abrigos/page.tsx` updated to delegate to `ShelterResults`. `app/layout.tsx` includes `<SyncOnLoad />`.
+  - `dexie` and `fake-indexeddb` (dev) added to `package.json`.
+  - All spec checklist items green: `npm test` (42 tests), `npm run build`, `npm run lint` pass. No service worker or cold-start handling present.
+  - CodeRabbit fix — `getLastSyncedAt()` failure in `geographic-picker.tsx` no longer discards a successfully-loaded cached snapshot: wrapped in its own try/catch so a metadata fetch failure defaults timestamp to `null` rather than propagating to outer catch.
+  - CodeRabbit fix — Error state in `shelter-results.tsx` now renders "Não foi possível carregar os dados" + "Tentar novamente" retry button (the established GeographicPicker failure pattern from unit 1.1, documented in Architecture Decisions), not the misleading `EmptyState` that conflates "couldn't load" with "no shelters found".

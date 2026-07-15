@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { getCachedGeoSnapshot, getLastSyncedAt } from "@/lib/offline/query";
 import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
 
 type Selection = {
@@ -55,9 +56,31 @@ function SelectField({
   );
 }
 
+function StalenessBanner({ lastSyncedAt }: { lastSyncedAt: string }) {
+  const formatted = React.useMemo(() => {
+    const d = new Date(lastSyncedAt);
+    return d.toLocaleString("pt-PT", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }, [lastSyncedAt]);
+
+  return (
+    <p className="mb-3 rounded-[10px] border border-border-default bg-surface px-3 py-2 text-[12px] text-secondary-text">
+      Sem ligação — a mostrar dados guardados (última atualização:{" "}
+      {formatted})
+    </p>
+  );
+}
+
 export function GeographicPicker() {
   const [snapshot, setSnapshot] = React.useState<GeoSnapshot | null>(null);
   const [error, setError] = React.useState(false);
+  const [isCached, setIsCached] = React.useState(false);
+  const [cachedAt, setCachedAt] = React.useState<string | null>(null);
   const [selection, setSelection] = React.useState<Selection>({
     provincia: null,
     distrito: null,
@@ -65,15 +88,34 @@ export function GeographicPicker() {
     quarteirao: null,
   });
 
-  const loadSnapshot = React.useCallback(() => {
+  const loadSnapshot = React.useCallback(async () => {
     setError(false);
-    fetch("/geo-snapshot.json")
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then((data: GeoSnapshot) => setSnapshot(data))
-      .catch(() => setError(true));
+    try {
+      const res = await fetch("/geo-snapshot.json");
+      if (!res.ok) throw new Error();
+      const data: GeoSnapshot = await res.json();
+      setSnapshot(data);
+      setIsCached(false);
+      setCachedAt(null);
+    } catch {
+      try {
+        const cached = await getCachedGeoSnapshot();
+        if (cached) {
+          setSnapshot(cached);
+          setIsCached(true);
+          try {
+            const syncedAt = await getLastSyncedAt();
+            setCachedAt(syncedAt);
+          } catch {
+            setCachedAt(null);
+          }
+        } else {
+          setError(true);
+        }
+      } catch {
+        setError(true);
+      }
+    }
   }, []);
 
   React.useEffect(() => {
@@ -137,6 +179,8 @@ export function GeographicPicker() {
 
   return (
     <div className="flex flex-col gap-6">
+      {isCached && cachedAt && <StalenessBanner lastSyncedAt={cachedAt} />}
+
       <h1 className="font-fraunces text-[15px] font-medium text-primary-text">
         Explorar abrigos
       </h1>

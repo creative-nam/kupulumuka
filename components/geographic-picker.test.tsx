@@ -11,6 +11,15 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/explorar",
 }));
 
+const mockGetCachedGeoSnapshot = vi.fn();
+const mockGetLastSyncedAt = vi.fn();
+
+vi.mock("@/lib/offline/query", () => ({
+  getCachedGeoSnapshot: (...args: unknown[]) =>
+    mockGetCachedGeoSnapshot(...args),
+  getLastSyncedAt: (...args: unknown[]) => mockGetLastSyncedAt(...args),
+}));
+
 const mockSnapshot = {
   provincias: [
     {
@@ -71,6 +80,9 @@ const mockSnapshot = {
 
 describe("GeographicPicker", () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
+    mockGetCachedGeoSnapshot.mockReset();
+    mockGetLastSyncedAt.mockReset();
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve(mockSnapshot),
@@ -211,6 +223,8 @@ describe("GeographicPicker", () => {
 
   it("shows an error message when the snapshot fetch fails", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    mockGetCachedGeoSnapshot.mockResolvedValue(null);
+
     render(<GeographicPicker />);
 
     await waitFor(() => {
@@ -222,6 +236,8 @@ describe("GeographicPicker", () => {
 
   it("shows a retry button when the fetch fails", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    mockGetCachedGeoSnapshot.mockResolvedValue(null);
+
     render(<GeographicPicker />);
 
     await waitFor(() => {
@@ -237,6 +253,8 @@ describe("GeographicPicker", () => {
       status: 404,
       json: () => Promise.resolve({}),
     });
+    mockGetCachedGeoSnapshot.mockResolvedValue(null);
+
     render(<GeographicPicker />);
 
     await waitFor(() => {
@@ -258,6 +276,7 @@ describe("GeographicPicker", () => {
         json: () => Promise.resolve(mockSnapshot),
       });
     global.fetch = fetchMock;
+    mockGetCachedGeoSnapshot.mockResolvedValue(null);
 
     const user = userEvent.setup();
     render(<GeographicPicker />);
@@ -330,5 +349,43 @@ describe("GeographicPicker", () => {
     await user.click(screen.getByRole("button", { name: /ver abrigos/i }));
 
     expect(mockPush).toHaveBeenCalledWith("/abrigos?quarteiraoId=q1");
+  });
+
+  it("falls back to Dexie cache when fetch fails and valid cache exists", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    mockGetCachedGeoSnapshot.mockResolvedValue(mockSnapshot);
+    mockGetLastSyncedAt.mockResolvedValue("2025-01-15T10:30:00.000Z");
+
+    render(<GeographicPicker />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Província")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Sem ligação/)).toBeInTheDocument();
+    expect(screen.getByText(/última atualização/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/15\/01\/2025/),
+    ).toBeInTheDocument();
+
+    // Should still work normally with cached data
+    const user = userEvent.setup();
+    await user.selectOptions(screen.getByLabelText("Província"), "p1");
+
+    const distritoSelect = screen.getByLabelText<HTMLSelectElement>("Distrito");
+    expect(distritoSelect).not.toBeDisabled();
+  });
+
+  it("shows error state when both fetch and cache fail", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    mockGetCachedGeoSnapshot.mockResolvedValue(null);
+
+    render(<GeographicPicker />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Não foi possível carregar os dados"),
+      ).toBeInTheDocument();
+    });
   });
 });

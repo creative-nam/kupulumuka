@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces } from "next/font/google";
 
 import { ThemeScript } from "@/components/theme-script";
+import { SyncOnLoad } from "@/components/sync-on-load";
 
 import "./globals.css";
 
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="pt" suppressHydrationWarning>
       <body className={`${fraunces.variable} antialiased`}>
         <ThemeScript />
+        <SyncOnLoad />
         {children}
       </body>
     </html>
