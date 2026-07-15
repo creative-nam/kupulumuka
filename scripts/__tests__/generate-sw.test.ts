@@ -1,28 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { existsSync, readFileSync, readdirSync, statSync, mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { walkDir } from "../lib/walk-dir";
+import { htmlFilePathToUrl } from "../generate-sw";
 
 const SW_PATH = join(process.cwd(), "public", "sw.js");
-
-// Replica of the script's walkDir to test independently of the current build output.
-function walkDir(
-  dir: string,
-  predicate: (name: string) => boolean,
-): string[] {
-  if (!existsSync(dir)) return [];
-  const results: string[] = [];
-  const entries = readdirSync(dir);
-  for (const entry of entries) {
-    const fullPath = join(dir, entry);
-    if (statSync(fullPath).isDirectory()) {
-      results.push(...walkDir(fullPath, predicate));
-    } else if (predicate(entry)) {
-      results.push(fullPath);
-    }
-  }
-  return results;
-}
 
 describe("service worker generation", () => {
   it("exists after build", () => {
@@ -171,5 +154,29 @@ describe("walkDir recursive directory scanner", () => {
     writeFileSync(join(tmpDir, "sub", "b.txt"), "");
     const results = walkDir(tmpDir, (n) => n.endsWith(".js"));
     expect(results).toEqual([]);
+  });
+});
+
+describe("htmlFilePathToUrl", () => {
+  const SERVER_APP = join(".next", "server", "app");
+
+  it("maps root index.html to /", () => {
+    expect(htmlFilePathToUrl(SERVER_APP, join(SERVER_APP, "index.html"))).toBe("/");
+  });
+
+  it("maps a flat route like explorar.html to /explorar", () => {
+    expect(htmlFilePathToUrl(SERVER_APP, join(SERVER_APP, "explorar.html"))).toBe("/explorar");
+  });
+
+  it("preserves nested route segments (the original bug)", () => {
+    expect(htmlFilePathToUrl(SERVER_APP, join(SERVER_APP, "foo", "bar.html"))).toBe("/foo/bar");
+  });
+
+  it("maps subdirectory index.html to the parent path", () => {
+    expect(htmlFilePathToUrl(SERVER_APP, join(SERVER_APP, "a", "b", "index.html"))).toBe("/a/b");
+  });
+
+  it("handles three-level nesting", () => {
+    expect(htmlFilePathToUrl(SERVER_APP, join(SERVER_APP, "a", "b", "c.html"))).toBe("/a/b/c");
   });
 });

@@ -1,31 +1,14 @@
 import { generateSW } from "workbox-build";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, existsSync, statSync } from "node:fs";
-import { join, relative, parse } from "node:path";
+import { join, relative, sep } from "node:path";
+import { walkDir } from "./lib/walk-dir";
 
 const STATIC_DIR = join(".next", "static");
 
 function hashFile(filePath: string): string {
   const content = readFileSync(filePath);
   return createHash("md5").update(content).digest("hex").slice(0, 8);
-}
-
-function walkDir(
-  dir: string,
-  predicate: (name: string) => boolean,
-): string[] {
-  if (!existsSync(dir)) return [];
-  const results: string[] = [];
-  const entries = readdirSync(dir);
-  for (const entry of entries) {
-    const fullPath = join(dir, entry);
-    if (statSync(fullPath).isDirectory()) {
-      results.push(...walkDir(fullPath, predicate));
-    } else if (predicate(entry)) {
-      results.push(fullPath);
-    }
-  }
-  return results;
 }
 
 function findBuildIdDir(): string | null {
@@ -43,6 +26,15 @@ function findBuildIdDir(): string | null {
 function urlFromStaticPath(absolutePath: string): string {
   const rel = relative(STATIC_DIR, absolutePath);
   return `/_next/static/${rel}`;
+}
+
+export function htmlFilePathToUrl(serverAppDir: string, filePath: string): string {
+  const rel = relative(serverAppDir, filePath).split(sep).join("/").replace(/\.html$/, "");
+  if (rel === "index" || rel.endsWith("/index")) {
+    const stripped = rel.replace(/(^|\/)index$/, "");
+    return stripped === "" ? "/" : `/${stripped}`;
+  }
+  return `/${rel}`;
 }
 
 async function main() {
@@ -85,8 +77,7 @@ async function main() {
     serverAppDir,
     (n) => n.endsWith(".html") && !n.startsWith("_") && n !== "404.html" && n !== "500.html",
   )) {
-    const { name } = parse(filePath);
-    const url = name === "index" ? "/" : `/${name}`;
+    const url = htmlFilePathToUrl(serverAppDir, filePath);
     manifestEntries.push({ url, revision: hashFile(filePath) });
   }
 
