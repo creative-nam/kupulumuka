@@ -59,7 +59,7 @@ export function AppHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex h-[52px] items-center justify-between border-b border-border-default bg-surface px-spacing-screen-x">
+    <header className="sticky top-0 z-50 flex h-[52px] items-center justify-between border-b border-border-default bg-surface px-4">
       <Link
         href="/explorar"
         className="font-fraunces text-[16px] font-semibold text-accent-brand hover:opacity-80"

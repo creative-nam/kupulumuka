@@ -105,7 +105,7 @@ export function ShelterResults({
 
   if (state.status === "loading") {
     return (
-      <main className="mx-auto flex min-h-screen flex-col px-spacing-screen-x py-6">
+      <main className="mx-auto flex min-h-screen flex-col px-4 py-6">
         <p className="text-sm text-secondary-text">A carregar...</p>
       </main>
     );
@@ -113,7 +113,7 @@ export function ShelterResults({
 
   if (state.status === "error") {
     return (
-      <main className="mx-auto flex min-h-screen flex-col px-spacing-screen-x py-6">
+      <main className="mx-auto flex min-h-screen flex-col px-4 py-6">
         <div className="flex flex-col items-center gap-4 py-8">
           <p className="text-sm text-secondary-text">
             Não foi possível carregar os dados
@@ -133,7 +133,7 @@ export function ShelterResults({
 
   if (shelters.length === 0) {
     return (
-      <main className="mx-auto flex min-h-screen flex-col px-spacing-screen-x py-6">
+      <main className="mx-auto flex min-h-screen flex-col px-4 py-6">
         <EmptyState />
       </main>
     );
@@ -141,7 +141,7 @@ export function ShelterResults({
   const isCached = state.status === "cached";
 
   return (
-    <main className="mx-auto flex min-h-screen flex-col px-spacing-screen-x py-6">
+    <main className="mx-auto flex min-h-screen flex-col px-4 py-6">
       <BackNav
         href="/explorar"
         contextLabel={shelters[0].bairroName}

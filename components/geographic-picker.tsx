@@ -3,6 +3,13 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getCachedGeoSnapshot, getLastSyncedAt } from "@/lib/offline/query";
 import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
 
@@ -30,6 +37,11 @@ function SelectField({
   placeholder: string;
   onChange: (value: string) => void;
 }) {
+  const items = React.useMemo(
+    () => Object.fromEntries(options.map((o) => [o.id, o.name])),
+    [options],
+  );
+
   return (
     <div className="flex flex-col gap-1">
       <label
@@ -38,20 +50,28 @@ function SelectField({
       >
         {label}
       </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+      <Select
+        value={value || null}
+        onValueChange={(v) => {
+          if (v !== null) onChange(v);
+        }}
         disabled={disabled}
-        className="rounded-[10px] border border-border-default bg-surface px-3 py-2 text-sm text-primary-text outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-brand disabled:cursor-not-allowed disabled:opacity-50"
+        items={items}
       >
-        <option value="">{placeholder}</option>
-        {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.name}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger
+          id={id}
+          className="w-full rounded-[12px]"
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((opt) => (
+            <SelectItem key={opt.id} value={opt.id}>
+              {opt.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

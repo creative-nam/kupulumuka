@@ -78,6 +78,17 @@ const mockSnapshot = {
   ],
 };
 
+async function selectOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: string,
+  optionName: string,
+) {
+  const trigger = screen.getByLabelText(label);
+  await user.click(trigger);
+  const option = await screen.findByRole("option", { name: optionName });
+  await user.click(option);
+}
+
 describe("GeographicPicker", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -126,17 +137,18 @@ describe("GeographicPicker", () => {
       expect(screen.getByLabelText("Província")).toBeInTheDocument();
     });
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
+    await selectOption(user, "Província", "Província A");
 
-    const distritoSelect = screen.getByLabelText<HTMLSelectElement>("Distrito");
-    expect(distritoSelect).not.toBeDisabled();
-    expect(
-      distritoSelect.options[distritoSelect.selectedIndex]?.text,
-    ).toBe("Selecionar distrito");
+    // Trigger must show the selected name, not the raw id value
+    expect(screen.getByLabelText("Província")).toHaveTextContent("Província A");
 
-    const optionValues = Array.from(distritoSelect.options).map((o) => o.value);
-    expect(optionValues).toContain("d1");
-    expect(optionValues).toContain("d2");
+    expect(screen.getByLabelText("Distrito")).not.toBeDisabled();
+
+    await user.click(screen.getByLabelText("Distrito"));
+    const options = await screen.findAllByRole("option");
+    const names = options.map((o) => o.textContent);
+    expect(names).toContain("Distrito A1");
+    expect(names).toContain("Distrito A2");
   });
 
   it("populates bairro options when a distrito is selected", async () => {
@@ -147,16 +159,15 @@ describe("GeographicPicker", () => {
       expect(screen.getByLabelText("Província")).toBeInTheDocument();
     });
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
+    await selectOption(user, "Província", "Província A");
+    await selectOption(user, "Distrito", "Distrito A1");
 
-    const bairroSelect = screen.getByLabelText<HTMLSelectElement>("Bairro");
-    expect(bairroSelect).not.toBeDisabled();
-
-    const optionValues = Array.from(bairroSelect.options).map((o) => o.value);
-    expect(optionValues).toContain("b1");
-    expect(optionValues).toContain("b2");
-    expect(optionValues).not.toContain("b3");
+    await user.click(screen.getByLabelText("Bairro"));
+    const options = await screen.findAllByRole("option");
+    const names = options.map((o) => o.textContent);
+    expect(names).toContain("Bairro A1-1");
+    expect(names).toContain("Bairro A1-2");
+    expect(names).not.toContain("Bairro A2-1");
   });
 
   it("populates quarteirão options when a bairro is selected", async () => {
@@ -167,20 +178,16 @@ describe("GeographicPicker", () => {
       expect(screen.getByLabelText("Província")).toBeInTheDocument();
     });
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
-    await user.selectOptions(screen.getByLabelText("Bairro"), "b1");
+    await selectOption(user, "Província", "Província A");
+    await selectOption(user, "Distrito", "Distrito A1");
+    await selectOption(user, "Bairro", "Bairro A1-1");
 
-    const quarteiraoSelect =
-      screen.getByLabelText<HTMLSelectElement>("Quarteirão");
-    expect(quarteiraoSelect).not.toBeDisabled();
-
-    const optionValues = Array.from(quarteiraoSelect.options).map(
-      (o) => o.value,
-    );
-    expect(optionValues).toContain("q1");
-    expect(optionValues).toContain("q2");
-    expect(optionValues).not.toContain("q3");
+    await user.click(screen.getByLabelText("Quarteirão"));
+    const options = await screen.findAllByRole("option");
+    const names = options.map((o) => o.textContent);
+    expect(names).toContain("Quarteirão A1-1-1");
+    expect(names).toContain("Quarteirão A1-1-2");
+    expect(names).not.toContain("Quarteirão A1-2-1");
   });
 
   it("resets lower levels when a parent selection changes", async () => {
@@ -191,31 +198,35 @@ describe("GeographicPicker", () => {
       expect(screen.getByLabelText("Província")).toBeInTheDocument();
     });
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
-    await user.selectOptions(screen.getByLabelText("Bairro"), "b1");
+    await selectOption(user, "Província", "Província A");
+    expect(screen.getByLabelText("Província")).toHaveTextContent("Província A");
 
-    expect(screen.getByLabelText("Quarteirão")).not.toBeDisabled();
+    await selectOption(user, "Distrito", "Distrito A1");
+    expect(screen.getByLabelText("Distrito")).toHaveTextContent("Distrito A1");
+
+    await selectOption(user, "Bairro", "Bairro A1-1");
+    expect(screen.getByLabelText("Bairro")).toHaveTextContent("Bairro A1-1");
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Quarteirão")).not.toBeDisabled();
+    });
 
     // Changing distrito resets bairro selection and disables quarteirão,
     // but bairro select stays enabled (distrito is still selected)
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d2");
+    await selectOption(user, "Distrito", "Distrito A2");
 
-    const bairroSelect = screen.getByLabelText<HTMLSelectElement>("Bairro");
-    expect(bairroSelect).not.toBeDisabled();
-    expect(bairroSelect.value).toBe("");
+    expect(screen.getByLabelText("Bairro")).not.toBeDisabled();
     expect(screen.getByLabelText("Quarteirão")).toBeDisabled();
 
     // Changing província clears distrito selection, disabling bairro + quarteirão
-    await user.selectOptions(screen.getByLabelText("Província"), "p2");
+    await selectOption(user, "Província", "Província B");
 
-    const distritoSelect = screen.getByLabelText<HTMLSelectElement>("Distrito");
-    expect(distritoSelect).not.toBeDisabled();
-    expect(distritoSelect.value).toBe("");
-    const distritoOptions = Array.from(distritoSelect.options).map(
-      (o) => o.value,
-    );
-    expect(distritoOptions).toContain("d3");
+    expect(screen.getByLabelText("Distrito")).not.toBeDisabled();
+
+    await user.click(screen.getByLabelText("Distrito"));
+    const distritoOptions = await screen.findAllByRole("option");
+    const distritoNames = distritoOptions.map((o) => o.textContent);
+    expect(distritoNames).toContain("Distrito B1");
 
     expect(screen.getByLabelText("Bairro")).toBeDisabled();
     expect(screen.getByLabelText("Quarteirão")).toBeDisabled();
@@ -305,13 +316,13 @@ describe("GeographicPicker", () => {
     const button = screen.getByRole("button", { name: /ver abrigos/i });
     expect(button).toBeDisabled();
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
+    await selectOption(user, "Província", "Província A");
     expect(button).toBeDisabled();
 
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
+    await selectOption(user, "Distrito", "Distrito A1");
     expect(button).toBeDisabled();
 
-    await user.selectOptions(screen.getByLabelText("Bairro"), "b1");
+    await selectOption(user, "Bairro", "Bairro A1-1");
     expect(button).toBeDisabled();
   });
 
@@ -323,10 +334,19 @@ describe("GeographicPicker", () => {
       expect(screen.getByLabelText("Província")).toBeInTheDocument();
     });
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
-    await user.selectOptions(screen.getByLabelText("Bairro"), "b1");
-    await user.selectOptions(screen.getByLabelText("Quarteirão"), "q1");
+    await selectOption(user, "Província", "Província A");
+    expect(screen.getByLabelText("Província")).toHaveTextContent("Província A");
+
+    await selectOption(user, "Distrito", "Distrito A1");
+    expect(screen.getByLabelText("Distrito")).toHaveTextContent("Distrito A1");
+
+    await selectOption(user, "Bairro", "Bairro A1-1");
+    expect(screen.getByLabelText("Bairro")).toHaveTextContent("Bairro A1-1");
+
+    await selectOption(user, "Quarteirão", "Quarteirão A1-1-1");
+    expect(screen.getByLabelText("Quarteirão")).toHaveTextContent(
+      "Quarteirão A1-1-1",
+    );
 
     expect(
       screen.getByRole("button", { name: /ver abrigos/i }),
@@ -341,10 +361,10 @@ describe("GeographicPicker", () => {
       expect(screen.getByLabelText("Província")).toBeInTheDocument();
     });
 
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
-    await user.selectOptions(screen.getByLabelText("Distrito"), "d1");
-    await user.selectOptions(screen.getByLabelText("Bairro"), "b1");
-    await user.selectOptions(screen.getByLabelText("Quarteirão"), "q1");
+    await selectOption(user, "Província", "Província A");
+    await selectOption(user, "Distrito", "Distrito A1");
+    await selectOption(user, "Bairro", "Bairro A1-1");
+    await selectOption(user, "Quarteirão", "Quarteirão A1-1-1");
 
     await user.click(screen.getByRole("button", { name: /ver abrigos/i }));
 
@@ -370,10 +390,9 @@ describe("GeographicPicker", () => {
 
     // Should still work normally with cached data
     const user = userEvent.setup();
-    await user.selectOptions(screen.getByLabelText("Província"), "p1");
+    await selectOption(user, "Província", "Província A");
 
-    const distritoSelect = screen.getByLabelText<HTMLSelectElement>("Distrito");
-    expect(distritoSelect).not.toBeDisabled();
+    expect(screen.getByLabelText("Distrito")).not.toBeDisabled();
   });
 
   it("shows error state when both fetch and cache fail", async () => {
@@ -387,5 +406,29 @@ describe("GeographicPicker", () => {
         screen.getByText("Não foi possível carregar os dados"),
       ).toBeInTheDocument();
     });
+  });
+
+  it("supports keyboard navigation to select an option", async () => {
+    const user = userEvent.setup();
+    render(<GeographicPicker />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Província")).toBeInTheDocument();
+    });
+
+    const provinciaTrigger = screen.getByLabelText("Província");
+    provinciaTrigger.focus();
+
+    // Open dropdown with Enter and select the already-highlighted first option
+    await user.keyboard("{Enter}");
+    await user.keyboard("{Enter}");
+
+    // After selecting a província, distrito should be enabled
+    await waitFor(() => {
+      expect(screen.getByLabelText("Distrito")).not.toBeDisabled();
+    });
+
+    // The trigger must show the option name, not the raw id value
+    expect(screen.getByLabelText("Província")).toHaveTextContent("Província A");
   });
 });
