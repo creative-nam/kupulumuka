@@ -86,6 +86,9 @@ describe("ShelterResults", () => {
       expect(screen.getByText("EPC Khongolote")).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText("Abrigos disponíveis em Khongolote"),
+    ).toBeInTheDocument();
     expect(screen.getByText("Igreja Católica")).toBeInTheDocument();
     expect(screen.queryByText("Sem ligação")).not.toBeInTheDocument();
   });
@@ -100,6 +103,9 @@ describe("ShelterResults", () => {
       expect(screen.getByText("Abrigo Cache")).toBeInTheDocument();
     });
 
+    expect(
+      screen.getByText("Abrigos disponíveis em Khongolote"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(/Sem ligação/),
     ).toBeInTheDocument();
@@ -179,6 +185,10 @@ describe("ShelterResults", () => {
         screen.getByText(/abrigos de bairros vizinhos/),
       ).toBeInTheDocument();
     });
+
+    expect(
+      screen.getByText("Abrigos próximos a Khongolote"),
+    ).toBeInTheDocument();
   });
 
   it("does not show staleness banner when serving live data", async () => {

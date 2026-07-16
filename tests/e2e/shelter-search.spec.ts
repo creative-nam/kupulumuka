@@ -28,7 +28,7 @@ test.describe("Shelter search and results", () => {
 
     // Back nav should show Khongolote context
     await expect(page.getByRole("link", { name: /Khongolote/ })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Abrigos disponíveis")).toBeVisible();
+    await expect(page.getByText("Abrigos disponíveis em Khongolote")).toBeVisible();
 
     // Should have 3 shelter cards in correct order
     const cards = page.getByText(/EPC Khongolote|Igreja Católica|Salão Paroquial S. João/);
@@ -76,7 +76,7 @@ test.describe("Shelter search and results", () => {
 
     // Back nav should show Ponta-Gêa context
     await expect(page.getByRole("link", { name: /Ponta-Gêa/ })).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Abrigos disponíveis")).toBeVisible();
+    await expect(page.getByText("Abrigos disponíveis em Ponta-Gêa")).toBeVisible();
 
     // Should show one shelter
     await expect(page.getByText("Escola Secundária da Ponta-Gêa")).toBeVisible();

@@ -145,7 +145,11 @@ export function ShelterResults({
       <BackNav
         href="/explorar"
         contextLabel={shelters[0].bairroName}
-        title="Abrigos disponíveis"
+        title={
+          shelters.some((s) => s.fromNeighboringBairro)
+            ? `Abrigos próximos a ${shelters[0].bairroName}`
+            : `Abrigos disponíveis em ${shelters[0].bairroName}`
+        }
       />
 
       {isCached && (
