@@ -38,6 +38,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     env:
+      DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       TEST_DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
     steps:
       - uses: actions/checkout@v4
@@ -46,11 +47,17 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - run: npm run test:integration
 
   build:
     name: Build
     runs-on: ubuntu-latest
+    env:
+      DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -58,12 +65,18 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - run: npm run build
 
   e2e:
     name: E2E Tests
     needs: build
     runs-on: ubuntu-latest
+    env:
+      DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -71,6 +84,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
