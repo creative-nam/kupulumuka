@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { selectOption } from "./helpers";
 
 test.describe("Shelter search and results", () => {
   test("selects Khongolote quarteirão and sees correct sorted shelters", async ({
@@ -8,17 +9,17 @@ test.describe("Shelter search and results", () => {
 
     await expect(page.getByLabel("Província")).toBeVisible({ timeout: 10000 });
 
-    // Província de Maputo (index 3, after placeholder, Cidade de Maputo, Gaza)
-    await page.getByLabel("Província").selectOption({ index: 3 });
+    // Província de Maputo
+    await selectOption(page, "Província", "Província de Maputo");
 
-    // Matola (index 1, first distrito after placeholder)
-    await page.getByLabel("Distrito").selectOption({ index: 1 });
+    // Matola
+    await selectOption(page, "Distrito", "Matola");
 
-    // Khongolote (index 1, first bairro after placeholder)
-    await page.getByLabel("Bairro").selectOption({ index: 1 });
+    // Khongolote
+    await selectOption(page, "Bairro", "Khongolote");
 
-    // Quarteirão 12 (index 1, first quarteirão after placeholder)
-    await page.getByLabel("Quarteirão").selectOption({ index: 1 });
+    // Quarteirão 12 (first quarteirão for Khongolote)
+    await selectOption(page, "Quarteirão", "Quarteirão 12");
 
     // Click Ver abrigos
     await page.getByRole("button", { name: "Ver abrigos" }).click();
@@ -56,17 +57,17 @@ test.describe("Shelter search and results", () => {
 
     await expect(page.getByLabel("Província")).toBeVisible({ timeout: 10000 });
 
-    // Sofala (index 4, after placeholder, Cidade de Maputo, Gaza, Província de Maputo)
-    await page.getByLabel("Província").selectOption({ index: 4 });
+    // Sofala
+    await selectOption(page, "Província", "Sofala");
 
-    // Beira (index 1, only distrito after placeholder)
-    await page.getByLabel("Distrito").selectOption({ index: 1 });
+    // Beira
+    await selectOption(page, "Distrito", "Beira");
 
-    // Ponta-Gêa (index 1, first bairro after placeholder)
-    await page.getByLabel("Bairro").selectOption({ index: 1 });
+    // Ponta-Gêa
+    await selectOption(page, "Bairro", "Ponta-Gêa");
 
-    // Quarteirão Praia (index 1, first quarteirão after placeholder)
-    await page.getByLabel("Quarteirão").selectOption({ index: 1 });
+    // Quarteirão Praia (first quarteirão for Ponta-Gêa)
+    await selectOption(page, "Quarteirão", "Quarteirão Praia");
 
     // Click Ver abrigos
     await page.getByRole("button", { name: "Ver abrigos" }).click();

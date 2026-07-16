@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { selectOption } from "./helpers";
 
 test.describe("Geographic picker", () => {
   test("click-through all four levels enables the Ver abrigos button", async ({
@@ -6,7 +7,7 @@ test.describe("Geographic picker", () => {
   }) => {
     await page.goto("/explorar");
 
-    // Wait for the geo-snapshot to load and selects to be enabled
+    // Wait for the snapshot to load and the top-level trigger to be enabled
     await expect(page.getByLabel("Província")).toBeVisible({ timeout: 10000 });
 
     // Initially all lower selects are disabled
@@ -19,8 +20,8 @@ test.describe("Geographic picker", () => {
       page.getByRole("button", { name: "Ver abrigos" }),
     ).toBeDisabled();
 
-    // Select a província (Cidade de Maputo is first option after placeholder)
-    await page.getByLabel("Província").selectOption({ index: 1 });
+    // Select a província
+    await selectOption(page, "Província", "Cidade de Maputo");
     await expect(page.getByLabel("Distrito")).not.toBeDisabled();
     await expect(page.getByLabel("Bairro")).toBeDisabled();
     await expect(page.getByLabel("Quarteirão")).toBeDisabled();
@@ -29,7 +30,7 @@ test.describe("Geographic picker", () => {
     ).toBeDisabled();
 
     // Select a distrito
-    await page.getByLabel("Distrito").selectOption({ index: 1 });
+    await selectOption(page, "Distrito", "Distrito Municipal Kampfumo");
     await expect(page.getByLabel("Bairro")).not.toBeDisabled();
     await expect(page.getByLabel("Quarteirão")).toBeDisabled();
     await expect(
@@ -37,14 +38,14 @@ test.describe("Geographic picker", () => {
     ).toBeDisabled();
 
     // Select a bairro
-    await page.getByLabel("Bairro").selectOption({ index: 1 });
+    await selectOption(page, "Bairro", "Central");
     await expect(page.getByLabel("Quarteirão")).not.toBeDisabled();
     await expect(
       page.getByRole("button", { name: "Ver abrigos" }),
     ).toBeDisabled();
 
     // Select a quarteirão — all four levels now selected
-    await page.getByLabel("Quarteirão").selectOption({ index: 1 });
+    await selectOption(page, "Quarteirão", "Quarteirão A");
     await expect(
       page.getByRole("button", { name: "Ver abrigos" }),
     ).not.toBeDisabled();
