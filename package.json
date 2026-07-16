@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack && npx tsx scripts/generate-sw.ts",
+    "build:e2e": "next build && npx tsx scripts/generate-sw.ts",
     "generate:sw": "npx tsx scripts/generate-sw.ts",
     "start": "next start",
     "lint": "eslint",
