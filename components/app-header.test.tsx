@@ -23,7 +23,7 @@ describe("AppHeader", () => {
   it("renders the Kupulumuka wordmark linking to /explorar", () => {
     render(<AppHeader />);
     const link = screen.getByRole("link", { name: /kupulumuka/i });
-    expect(link).toHaveAttribute("href", "/wrong-path");
+    expect(link).toHaveAttribute("href", "/explorar");
   });
 
   it("renders an icon-only theme toggle with accessible label", () => {
