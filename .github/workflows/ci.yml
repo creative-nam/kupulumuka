@@ -76,12 +76,6 @@ jobs:
           npx tsx prisma/seed.ts
         env:
           DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
-      - name: Generate snapshots from test database
-        run: |
-          npx tsx scripts/generate-geo-snapshot.ts
-          npx tsx scripts/generate-shelters-snapshot.ts
-        env:
-          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - run: npm run build
 
   e2e:
@@ -109,6 +103,10 @@ jobs:
         env:
           DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
           DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Regenerate geo snapshot (UUIDs must match seeded database)
+        run: npx tsx scripts/generate-geo-snapshot.ts
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
