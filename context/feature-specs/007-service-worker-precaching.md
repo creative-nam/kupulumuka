@@ -2,7 +2,7 @@
 
 ## Goal
 
-Make the app usable from a genuinely cold start with zero network — tab closed, then reopened in airplane mode, not just a connection dropping mid-session (that's unit 006). Register a service worker (next-pwa/Workbox) that precaches the app shell (JS/CSS bundles, the self-hosted Fraunces files from unit 0.1) and both snapshot files, so a returning offline user gets the full app plus their last-synced data.
+Make the app usable from a genuinely cold start with zero network — tab closed, then reopened in airplane mode, not just a connection dropping mid-session (that's unit 006). Register a service worker (next-pwa/Workbox) that precaches the app shell (JS/CSS bundles, the self-hosted Fraunces files from unit 0.1), so a returning offline user gets the full app with snapshot data served via StaleWhileRevalidate runtime caching (populated on first online visit, refreshed on subsequent visits).
 
 **Explicit, important limitation this unit does not remove:** a device that has *never* been online with this app cannot have any data to show — there is nothing to precache without at least one prior successful sync. This unit guarantees a *returning* user's cold-offline experience works, not a true first-ever-use-fully-offline scenario. Worth remembering for later units (e.g. 5.1's onboarding) that a first online visit is a real, load-bearing requirement, not an assumption to design around invisibly.
 
@@ -14,7 +14,7 @@ Make the app usable from a genuinely cold start with zero network — tab closed
 
 ## Design
 
-**Workbox precache list:** the app shell's JS/CSS bundles, the self-hosted Fraunces font files, `geo-snapshot.json`, `shelters-snapshot.json`. Runtime caching for the snapshots uses `StaleWhileRevalidate` — serve the cached copy instantly, refresh in the background when online, rather than a strategy that never checks for updates once cached.
+**Workbox precache list:** the app shell's JS/CSS bundles and the self-hosted Fraunces font files. Snapshots (`geo-snapshot.json`, `shelters-snapshot.json`) are NOT precached — they are handled via StaleWhileRevalidate runtime caching. The runtime cache serves the cached copy instantly and refreshes in the background when online, matching the stale-while-revalidate intent. A precached route would take priority over the runtime handler and prevent the background refresh from ever firing.
 
 **Adjacency data is explicitly not part of this precache list.** Per unit 006's actual implementation, `BairroVizinho` adjacency pairs are served via `/api/adjacency` (a dynamic Prisma-backed route, not a static file) and cached into Dexie by 006's own sync mechanism — a separate layer from Workbox entirely. Don't attempt to add `/api/adjacency` to the Workbox precache list; a dynamic API route has no fixed content to precache, and Dexie already holds whatever was last synced. This unit's job stops at making the static shell/assets available offline; the app's own data-layer fallback (built in 006) handles the rest.
 
@@ -24,13 +24,13 @@ Make the app usable from a genuinely cold start with zero network — tab closed
 
 1. Configure next-pwa/Workbox with the precache list described above.
 2. Register the service worker.
-3. Write a test confirming the precache manifest actually includes the app shell, fonts, and both snapshots (devtools Application panel check, documented as a manual verification step if it can't be fully automated — don't just trust the config file's intent).
+3. Write a test confirming the precache manifest actually includes the app shell and fonts (devtools Application panel check, documented as a manual verification step if it can't be fully automated — don't just trust the config file's intent). Snapshot runtime caching is verified separately via e2e (confirmed working via DevTools Cache Storage and the cold-start offline test).
 4. Write the cold-start Playwright e2e test: load the app online once (triggering 006's sync), then start a fresh browser context with offline set from the beginning, and confirm the picker and search flow both work using the previously-synced data.
 5. Confirm `StaleWhileRevalidate` actually refreshes cached snapshots after a subsequent online visit — not just serving the same first-cached copy indefinitely.
 
 ## Success Checklist
 
-- [ ] Service worker registers successfully and its precache manifest, confirmed via devtools, includes the app shell, self-hosted fonts, and both snapshot files.
+- [ ] Service worker registers successfully and its precache manifest, confirmed via devtools, includes the app shell and self-hosted fonts. Snapshots are confirmed cached via StaleWhileRevalidate runtime caching (DevTools Cache Storage, not precache).
 - [ ] Cold-start e2e test passes: sync online once, fully close/reopen in an offline context, picker and search both work using previously-synced data.
 - [ ] `StaleWhileRevalidate` is confirmed (by test) to refresh snapshot data on a subsequent online visit, not serve a permanently stale first copy.
 - [ ] The explicit "first-ever use requires one online visit" limitation is documented in `progress-tracker.md` for future units (especially 5.1) to account for.

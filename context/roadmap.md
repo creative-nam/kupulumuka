@@ -29,7 +29,7 @@ The screen we already mocked up — Tier 1 before Tier 2, capacity status pill, 
 - **1.3b — Offline data sync & fallback rendering:** Dexie sync + client-side fallback for a *warm* offline session (tab already open, connection drops).
 - **1.3c — Service worker precaching:** the *cold* offline case (tab closed, reopened with no network) — requires the app shell itself to be precached.
 
-Service worker caches the app shell + geographic snapshot; Dexie stores it for offline search. Search must return real results with zero network.
+Service worker caches the app shell; geographic and shelter snapshots are served via StaleWhileRevalidate runtime caching; Dexie stores them for offline search. Search must return real results with zero network.
 *Depends on: 1.2. Sub-units are sequential (1.3a → 1.3b → 1.3c).*
 
 ## Phase 2 — Community contribution

@@ -22,6 +22,21 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - run: npm run typecheck
+
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
