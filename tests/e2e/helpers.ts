@@ -23,6 +23,10 @@ export async function selectOption(
 ) {
   const trigger = page.getByLabel(label);
   await trigger.click();
+  // Popup opens asynchronously (portal-based) — wait for the option to be
+  // attached and visible before clicking.  Without this, in CI the popup's
+  // animation can race with the click and the option detaches mid-action.
   const option = page.getByRole("option", { name: optionName });
+  await option.waitFor({ state: "visible", timeout: 5000 });
   await option.click();
 }
