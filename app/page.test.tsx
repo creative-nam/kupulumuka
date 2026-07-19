@@ -1,3 +1,4 @@
+/// <reference types="vitest/globals" />
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { redirect } from "next/navigation";

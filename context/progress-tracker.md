@@ -194,4 +194,10 @@ change.
   - Native `<select>` architecture decision notes (×2) marked historical — migrated to shadcn/Base UI Select during visual polish.
   - `007-service-worker-precaching.md` spec updated: snapshots described as runtime-only (StaleWhileRevalidate), not precache+runtime, matching the deliberate implementation and documented Architecture Decision.
   - `roadmap.md` 1.3 cold-start description updated to include shelters-snapshot.json alongside geo-snapshot.
-  - `lib/shelters/rank-and-filter.test.ts` missing `AdjacencyPair` import added — `tsc` was already failing on this (`TS2304: Cannot find name 'AdjacencyPair'` at line 163). Previously masked by no `tsc` script in `package.json` (only `npm run lint` which doesn't check types). All 67 unit tests, lint, and tsc pass clean after the fix.
+   - `lib/shelters/rank-and-filter.test.ts` missing `AdjacencyPair` import added — `tsc` was already failing on this (`TS2304: Cannot find name 'AdjacencyPair'` at line 163). Previously masked by no `tsc` script in `package.json` (only `npm run lint` which doesn't check types). All 67 unit tests, lint, and tsc pass clean after the fix.
+
+- **Real gap closed — CI had no dedicated type-checking step:** `npm run lint` is ESLint-only, and `npm test` doesn't do full project type-checking — the genuine `TS2304` error went undetected through multiple CI runs.
+  - `package.json` now has `"typecheck": "tsc --noEmit"`.
+  - `.github/workflows/ci.yml` has a new `typecheck` job (name: "TypeScript") that runs in parallel with lint and unit tests: `npm ci` → `npx prisma generate` (needed for Prisma types) → `npm run typecheck`.
+  - `tsconfig.json` excludes `**/*.test.ts` and `**/*.test.tsx` from the tsc scan — pre-existing test file errors (`page.test.tsx` uses vitest globals that `tsc` doesn't understand) are handled by vitest's own TypeScript integration.
+  - **Deliberate-break verification:** Pushed `components/app-header.tsx` with `import type { NonExistentType } from "react"`; the TypeScript CI job failed with `TS2305: Module has no exported member 'NonExistentType'` while ESLint only produced a warning (0 errors) and all tests passed. Reverted. The reverted commit's CI run confirmed all jobs green, including TypeScript.
