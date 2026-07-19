@@ -32,16 +32,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - name: Debug — dump SW CSS precache entries
-        run: |
-          echo "=== SW file size ==="
-          wc -c public/sw.js
-          echo "=== CSS chunk entries ==="
-          grep -oP '/_next/static/chunks/[^"]*\.css[^}]*revision:"[0-9a-f]{8}"' public/sw.js || echo "(none found)"
-          echo "=== All .css references in SW ==="
-          grep -oP '/_next/static/[^"]*\.css' public/sw.js || echo "(none found)"
-          echo "=== SW first 300 chars ==="
-          head -c 300 public/sw.js
       - run: npm run test
 
   integration:
@@ -79,8 +69,16 @@ jobs:
         run: npx prisma generate
         env:
           DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
-      - name: Debug — query shelter count from TEST_DIRECT_URL
-        run: npx prisma db execute --stdin <<< "SELECT COUNT(*) AS shelter_count FROM \"Shelter\";"
+      - name: Deploy migrations & seed test database
+        run: |
+          npx prisma migrate deploy
+          npx tsx prisma/seed.ts
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Generate snapshots from test database
+        run: |
+          npx tsx scripts/generate-geo-snapshot.ts
+          npx tsx scripts/generate-shelters-snapshot.ts
         env:
           DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - run: npm run build
@@ -103,6 +101,13 @@ jobs:
         run: npx prisma generate
         env:
           DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Deploy migrations & seed test database
+        run: |
+          npx prisma migrate deploy
+          npx tsx prisma/seed.ts
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
