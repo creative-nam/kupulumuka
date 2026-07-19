@@ -45,8 +45,19 @@ async function main() {
 
   const manifestEntries: { url: string; revision: string }[] = [];
 
+  // Turbopack puts CSS in chunks/, webpack puts it in css/ — scan both.
+  const cssDirs = ["chunks", "css"].map((d) => join(STATIC_DIR, d)).filter(existsSync);
+  for (const dir of cssDirs) {
+    for (const filePath of walkDir(dir, (n) => n.endsWith(".css"))) {
+      manifestEntries.push({
+        url: urlFromStaticPath(filePath),
+        revision: hashFile(filePath),
+      });
+    }
+  }
+
   const chunkDir = join(STATIC_DIR, "chunks");
-  for (const filePath of walkDir(chunkDir, (n) => n.endsWith(".js") || n.endsWith(".css"))) {
+  for (const filePath of walkDir(chunkDir, (n) => n.endsWith(".js"))) {
     manifestEntries.push({
       url: urlFromStaticPath(filePath),
       revision: hashFile(filePath),

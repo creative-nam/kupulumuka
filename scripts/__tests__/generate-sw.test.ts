@@ -26,10 +26,10 @@ describe("service worker generation", () => {
     expect(jsMatch!.length).toBeGreaterThan(0);
   });
 
-  it("precaches app shell CSS chunks at any depth", () => {
+  it("precaches app shell CSS from any static subdirectory (chunks/ or css/)", () => {
     const content = readFileSync(SW_PATH, "utf-8");
     const cssMatch = content.match(
-      /\/_next\/static\/chunks\/.+\.css[^}]*revision:"[0-9a-f]{8}"/g,
+      /\/_next\/static\/(?:chunks|css)\/.+\.css[^}]*revision:"[0-9a-f]{8}"/g,
     );
     expect(cssMatch).not.toBeNull();
     expect(cssMatch!.length).toBeGreaterThan(0);
