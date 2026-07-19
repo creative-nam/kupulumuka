@@ -55,6 +55,7 @@ jobs:
 
   build:
     name: Build
+    needs: integration
     runs-on: ubuntu-latest
     env:
       DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
