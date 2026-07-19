@@ -376,6 +376,16 @@ const data: ProvinciaSeed[] = [
 export async function runSeed(prisma: PrismaClient) {
   console.log("Starting seed...");
 
+  // Wipe geographic data in dependency order so the seed is idempotent.
+  // Users are upserted and preserved across runs.
+  await prisma.shelter.deleteMany();
+  await prisma.user.updateMany({ data: { homeQuarteiraoId: null } });
+  await prisma.bairroVizinho.deleteMany();
+  await prisma.quarteirao.deleteMany();
+  await prisma.bairro.deleteMany();
+  await prisma.distrito.deleteMany();
+  await prisma.provincia.deleteMany();
+
   await createUsers(prisma);
 
   for (const provincia of data) {

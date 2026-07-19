@@ -9,20 +9,6 @@
           "name": "Distrito Municipal Kampfumo",
           "bairros": [
             {
-              "id": "36d2073d-fed1-43ea-b97e-5bef00a8b555",
-              "name": "Central",
-              "quarteiroes": [
-                {
-                  "id": "347d474c-8082-4e51-bdb2-3874783fc5a4",
-                  "name": "Quarteirão A"
-                },
-                {
-                  "id": "786c57d5-07ef-481c-a278-eebe8bfb2854",
-                  "name": "Quarteirão B"
-                }
-              ]
-            },
-            {
               "id": "ec325d1d-a25a-4c9f-ab62-d524df0350be",
               "name": "Alto Maé",
               "quarteiroes": [
@@ -37,12 +23,16 @@
               ]
             },
             {
-              "id": "982f9137-5649-4c8d-b5ff-ac269bd9663e",
-              "name": "Polana Cimento",
+              "id": "36d2073d-fed1-43ea-b97e-5bef00a8b555",
+              "name": "Central",
               "quarteiroes": [
                 {
-                  "id": "abc2facd-d4d8-4c83-83f1-8fe2d14bfe93",
-                  "name": "Quarteirão Central"
+                  "id": "347d474c-8082-4e51-bdb2-3874783fc5a4",
+                  "name": "Quarteirão A"
+                },
+                {
+                  "id": "786c57d5-07ef-481c-a278-eebe8bfb2854",
+                  "name": "Quarteirão B"
                 }
               ]
             },
@@ -65,6 +55,16 @@
                   "name": "Quarteirão Malhangalene"
                 }
               ]
+            },
+            {
+              "id": "982f9137-5649-4c8d-b5ff-ac269bd9663e",
+              "name": "Polana Cimento",
+              "quarteiroes": [
+                {
+                  "id": "abc2facd-d4d8-4c83-83f1-8fe2d14bfe93",
+                  "name": "Quarteirão Central"
+                }
+              ]
             }
           ]
         }
@@ -83,12 +83,22 @@
               "name": "Chókwè Sede",
               "quarteiroes": [
                 {
-                  "id": "f6423703-a418-4d60-9e95-3b124c173cea",
-                  "name": "Quarteirão Central"
-                },
-                {
                   "id": "8987ebf6-2fa8-44d2-93aa-a3512b371947",
                   "name": "Quarteirão Aeroporto"
+                },
+                {
+                  "id": "f6423703-a418-4d60-9e95-3b124c173cea",
+                  "name": "Quarteirão Central"
+                }
+              ]
+            },
+            {
+              "id": "0fa2f5a5-0210-43ec-8d80-5b2bf5f63d34",
+              "name": "Conhane",
+              "quarteiroes": [
+                {
+                  "id": "0b279173-16cd-4392-a3fa-6f79e1311d9c",
+                  "name": "Quarteirão Conhane Baixo"
                 }
               ]
             },
@@ -121,16 +131,6 @@
                   "name": "Quarteirão Xilembene Alto"
                 }
               ]
-            },
-            {
-              "id": "0fa2f5a5-0210-43ec-8d80-5b2bf5f63d34",
-              "name": "Conhane",
-              "quarteiroes": [
-                {
-                  "id": "0b279173-16cd-4392-a3fa-6f79e1311d9c",
-                  "name": "Quarteirão Conhane Baixo"
-                }
-              ]
             }
           ]
         }
@@ -141,9 +141,49 @@
       "name": "Província de Maputo",
       "distritos": [
         {
+          "id": "980bbbf8-223a-4b00-8bc7-4f182bc14a4f",
+          "name": "Boane",
+          "bairros": [
+            {
+              "id": "e04ea342-b097-46f3-9b0b-a12298f66f37",
+              "name": "Beluluane",
+              "quarteiroes": [
+                {
+                  "id": "ccd23611-f149-4048-8c90-88cc7e6f3dc0",
+                  "name": "Quarteirão Beluluane"
+                }
+              ]
+            },
+            {
+              "id": "cbd430ba-7518-4ca0-a07b-5f4559c306b9",
+              "name": "Boane Sede",
+              "quarteiroes": [
+                {
+                  "id": "f3cef0a2-ab70-4686-acf7-5ceb2fc995c1",
+                  "name": "Quarteirão Central"
+                },
+                {
+                  "id": "9f9a79c8-f2bc-45b4-8d41-640aaf112176",
+                  "name": "Quarteirão Novo"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "id": "4af26e18-bf36-48d9-a583-e4991ee95c69",
           "name": "Matola",
           "bairros": [
+            {
+              "id": "b8fefe9f-4538-4f40-b344-e9953cac36f5",
+              "name": "Fomento",
+              "quarteiroes": [
+                {
+                  "id": "e611e939-2ff0-4b2d-a755-200002cfce65",
+                  "name": "Quarteirão Fomento Centro"
+                }
+              ]
+            },
             {
               "id": "588c6ec6-399f-42fb-87e3-769d4bbc8440",
               "name": "Khongolote",
@@ -163,6 +203,16 @@
               ]
             },
             {
+              "id": "5db07dbb-c232-4aee-be50-f591cc17f844",
+              "name": "Matola Gare",
+              "quarteiroes": [
+                {
+                  "id": "4fce4727-36af-4953-8944-14b1cb97e68b",
+                  "name": "Quarteirão Estação"
+                }
+              ]
+            },
+            {
               "id": "69f77959-59f5-4d38-81a1-f0c1bde34757",
               "name": "T-3",
               "quarteiroes": [
@@ -177,62 +227,12 @@
               ]
             },
             {
-              "id": "5db07dbb-c232-4aee-be50-f591cc17f844",
-              "name": "Matola Gare",
-              "quarteiroes": [
-                {
-                  "id": "4fce4727-36af-4953-8944-14b1cb97e68b",
-                  "name": "Quarteirão Estação"
-                }
-              ]
-            },
-            {
-              "id": "b8fefe9f-4538-4f40-b344-e9953cac36f5",
-              "name": "Fomento",
-              "quarteiroes": [
-                {
-                  "id": "e611e939-2ff0-4b2d-a755-200002cfce65",
-                  "name": "Quarteirão Fomento Centro"
-                }
-              ]
-            },
-            {
               "id": "f71b1bb3-bb63-4a91-b733-c779a22e8e49",
               "name": "Tsalala",
               "quarteiroes": [
                 {
                   "id": "5945f3c9-50ec-45ce-9c81-930a0308dfe8",
                   "name": "Quarteirão Tsalala Sul"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "id": "980bbbf8-223a-4b00-8bc7-4f182bc14a4f",
-          "name": "Boane",
-          "bairros": [
-            {
-              "id": "cbd430ba-7518-4ca0-a07b-5f4559c306b9",
-              "name": "Boane Sede",
-              "quarteiroes": [
-                {
-                  "id": "f3cef0a2-ab70-4686-acf7-5ceb2fc995c1",
-                  "name": "Quarteirão Central"
-                },
-                {
-                  "id": "9f9a79c8-f2bc-45b4-8d41-640aaf112176",
-                  "name": "Quarteirão Novo"
-                }
-              ]
-            },
-            {
-              "id": "e04ea342-b097-46f3-9b0b-a12298f66f37",
-              "name": "Beluluane",
-              "quarteiroes": [
-                {
-                  "id": "ccd23611-f149-4048-8c90-88cc7e6f3dc0",
-                  "name": "Quarteirão Beluluane"
                 }
               ]
             }
@@ -249,26 +249,12 @@
           "name": "Beira",
           "bairros": [
             {
-              "id": "69b88336-d88d-4da0-8481-3b8a5de3ea47",
-              "name": "Ponta-Gêa",
+              "id": "bbb59757-3211-4103-af3d-bf6d6af487f0",
+              "name": "Estoril",
               "quarteiroes": [
                 {
-                  "id": "6d052e0c-62c0-4c63-ae94-d7857e9aef74",
-                  "name": "Quarteirão Praia"
-                },
-                {
-                  "id": "b07d7695-bd78-42d7-ba5a-1abeeca29aa6",
-                  "name": "Quarteirão Centro"
-                }
-              ]
-            },
-            {
-              "id": "4773ad58-d3c4-4494-94b7-0483cb231cd5",
-              "name": "Matacuane",
-              "quarteiroes": [
-                {
-                  "id": "76a97c8a-c4bd-4699-8d69-4dfded487502",
-                  "name": "Quarteirão Matacuane A"
+                  "id": "93b814f3-5e31-4e69-a50c-2fade602b6b8",
+                  "name": "Quarteirão Estoril Sul"
                 }
               ]
             },
@@ -283,12 +269,12 @@
               ]
             },
             {
-              "id": "bbb59757-3211-4103-af3d-bf6d6af487f0",
-              "name": "Estoril",
+              "id": "4773ad58-d3c4-4494-94b7-0483cb231cd5",
+              "name": "Matacuane",
               "quarteiroes": [
                 {
-                  "id": "93b814f3-5e31-4e69-a50c-2fade602b6b8",
-                  "name": "Quarteirão Estoril Sul"
+                  "id": "76a97c8a-c4bd-4699-8d69-4dfded487502",
+                  "name": "Quarteirão Matacuane A"
                 }
               ]
             },
@@ -299,6 +285,20 @@
                 {
                   "id": "594ee88e-0d32-49ae-b704-57db520f3b29",
                   "name": "Quarteirão Munhava Alto"
+                }
+              ]
+            },
+            {
+              "id": "69b88336-d88d-4da0-8481-3b8a5de3ea47",
+              "name": "Ponta-Gêa",
+              "quarteiroes": [
+                {
+                  "id": "b07d7695-bd78-42d7-ba5a-1abeeca29aa6",
+                  "name": "Quarteirão Centro"
+                },
+                {
+                  "id": "6d052e0c-62c0-4c63-ae94-d7857e9aef74",
+                  "name": "Quarteirão Praia"
                 }
               ]
             }
