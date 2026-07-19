@@ -3,17 +3,11 @@ import "dotenv/config";
 import { execSync } from "node:child_process";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { PrismaClient } from "@/lib/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
 import { runSeed } from "@/prisma/seed";
 import { generateSheltersSnapshot } from "@/scripts/generate-shelters-snapshot";
+import { requireTestDbUrl, createTestClient } from "./setup";
 
-const dbUrl = process.env["TEST_DIRECT_URL"];
-if (!dbUrl) throw new Error("TEST_DIRECT_URL is not set");
-
-async function createClient() {
-  const adapter = new PrismaPg({ connectionString: dbUrl });
-  return new PrismaClient({ adapter });
-}
+const dbUrl = requireTestDbUrl();
 
 let prisma: PrismaClient;
 
@@ -23,7 +17,7 @@ beforeAll(async () => {
     stdio: "inherit",
   });
 
-  prisma = await createClient();
+  prisma = await createTestClient();
 
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE "BairroVizinho" CASCADE`);
   await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Shelter" CASCADE`);

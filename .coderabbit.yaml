@@ -1,0 +1,9 @@
+reviews:
+  path_filters:
+    exclude:
+      - "**/*.lock"
+      - "dist/**/*"
+      - "node_modules/**/*"
+      - ".claude/**"
+      - ".agents/**"
+      
