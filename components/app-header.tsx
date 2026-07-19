@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import type { NonExistentType } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { getDocumentTheme, toggleDocumentTheme } from "@/lib/theme/apply-theme";
 
