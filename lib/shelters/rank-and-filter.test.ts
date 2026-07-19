@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { rankAndFilterShelters } from "./rank-and-filter";
-import type { AdjacencyPair, ShelterInput } from "./rank-and-filter";
+import type { ShelterInput } from "./rank-and-filter";
 
 const tierOrder = { OFFICIAL: 0, COMMUNITY: 1 } as const;
 const capOrder = { AVAILABLE: 0, NEARLY_FULL: 1, FULL: 2 } as const;
