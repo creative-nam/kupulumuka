@@ -106,6 +106,7 @@ async function main() {
     clientsClaim: true,
     cleanupOutdatedCaches: true,
     navigateFallback: "/explorar",
+    navigateFallbackDenylist: [/^\/abrigos(?:\?.*)?$/],
     runtimeCaching: [
       {
         urlPattern: /\/geo-snapshot\.json$/,
@@ -118,7 +119,7 @@ async function main() {
         options: { cacheName: "snapshots" },
       },
       {
-        urlPattern: /^\/($|\?.*$|explorar|abrigos)/,
+        urlPattern: ({ url }) => ["/", "/explorar", "/abrigos"].includes(url.pathname),
         handler: "NetworkFirst",
         options: { cacheName: "pages" },
       },

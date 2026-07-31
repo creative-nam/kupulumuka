@@ -12,9 +12,10 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run build:e2e && npx next start -p 3000",
+    command: "npx tsx scripts/run-e2e-webserver.ts",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: false,
+    timeout: 180000,
   },
   projects: [
     {
