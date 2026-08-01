@@ -176,19 +176,30 @@ test.describe("Cold start offline (service worker precaching)", () => {
         return new Promise<boolean>((resolve) => {
           const openRequest = indexedDB.open("kupulumuka");
           openRequest.onerror = () => resolve(false);
+          openRequest.onblocked = () => resolve(false);
           openRequest.onsuccess = () => {
             const db = openRequest.result;
-            const transaction = db.transaction("syncMeta", "readonly");
-            const store = transaction.objectStore("syncMeta");
-            const getRequest = store.get("lastSyncedAt");
-            getRequest.onerror = () => {
+            try {
+              if (!db.objectStoreNames.contains("syncMeta")) {
+                db.close();
+                resolve(false);
+                return;
+              }
+              const transaction = db.transaction("syncMeta", "readonly");
+              const store = transaction.objectStore("syncMeta");
+              const getRequest = store.get("lastSyncedAt");
+              getRequest.onerror = () => {
+                db.close();
+                resolve(false);
+              };
+              getRequest.onsuccess = () => {
+                db.close();
+                resolve(Boolean(getRequest.result?.value));
+              };
+            } catch {
               db.close();
               resolve(false);
-            };
-            getRequest.onsuccess = () => {
-              db.close();
-              resolve(Boolean(getRequest.result?.value));
-            };
+            }
           };
         });
       }, { timeout: 15000 });
