@@ -14,7 +14,7 @@ Given a selected quarteirão (from unit 1.1's picker), show the shelters that se
 
 **Wiring the dependency from 1.1:** unit 1.1 built a "Ver abrigos" button that was correctly disabled/enabled based on selection state but had nowhere to go. This unit gives it a real destination: navigating to this route with the selected quarteirão's id as a query param (e.g. `/abrigos?quarteiraoId=...`). Update the 1.1 component to perform this navigation — this is a small, expected cross-unit edit, not scope creep, since 1.1's spec explicitly anticipated 1.2 wiring a destination onto that button.
 
-**Data flow:** Server Component page reads `quarteiraoId` from `searchParams` and calls a query function — don't inline the query logic in the page itself. Put it in `lib/shelters/search.ts` as `getSheltersForQuarteirao(quarteiraoId)`, so it's a clean, independently testable unit, and so the future USSD channel (deferred, but planned per `architecture.md`'s "Future-Channel Compatibility") can call the same function instead of a page-specific one.
+**Data flow** *(unit 1.2 baseline — superseded by unit 1.3b)*: Server Component page reads `quarteiraoId` from `searchParams` and calls a query function — don't inline the query logic in the page itself. Put it in `lib/shelters/search.ts` as `getSheltersForQuarteirao(quarteiraoId)`, so it's a clean, independently testable unit, and so the future USSD channel (deferred, but planned per `architecture.md`'s "Future-Channel Compatibility") can call the same function instead of a page-specific one. **Historical:** this server-rendered, direct-Prisma design was the unit 1.2 implementation. Unit 1.3b replaced it with a thin Server Component page wrapper that delegates to the client-side `ShelterResults`, which fetches from `/api/shelters` and falls back to the Dexie cache (see `progress-tracker.md` Architecture Decisions). The `getSheltersForQuarteirao` function itself remains, now wrapped by the `/api/shelters` route.
 
 **Sort order** (this is the concrete implementation of "Tier 1 before Tier 2" from `project-overview.md`): tier ascending (`OFFICIAL` before `COMMUNITY`), then capacity status ascending in severity (`AVAILABLE`, then `NEARLY_FULL`, then `FULL`), then shelter name alphabetically as a final tiebreak. This ordering is a testable, explicit contract — not "whatever order the query happens to return."
 
@@ -45,7 +45,7 @@ Given a selected quarteirão (from unit 1.1's picker), show the shelters that se
 - [ ] The empty-state and "showing nearby results" copy is in Portuguese, follows `ui-context.md`'s tone conventions, and does not reference shelter registration (out of scope).
 - [ ] Share button works via `navigator.share()` where available, with a tested clipboard fallback otherwise.
 - [ ] e2e test confirms correct results for at least two different quarteirãos in two different provinces, not just one.
-- [ ] The results page itself is a Server Component; only the share button is a Client Component.
+- [ ] The results page itself is a Server Component; only the share button is a Client Component. **Historical (unit 1.2 baseline):** since superseded by unit 1.3b's thin Server Component page wrapper + client-side `ShelterResults` fallback shell.
 - [ ] `npm run build` and `npm run lint` pass with no errors introduced.
 - [ ] No offline/service-worker code, no shelter-registration code, no alert-subscription code present in the diff.
 - [ ] `progress-tracker.md` updated: unit marked complete, any deviations noted.
