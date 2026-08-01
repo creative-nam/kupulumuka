@@ -362,4 +362,34 @@ describe("Seed data integration", () => {
     const tiers = shelters.map((s) => s.tier);
     expect(tiers).toEqual(expect.arrayContaining(["OFFICIAL", "COMMUNITY"]));
   });
+
+  it("re-seeding produces identical ids for every geographic row and shelter", async () => {
+    const collectIds = async () => ({
+      provincias: (
+        await prisma.provincia.findMany({ orderBy: { name: "asc" } })
+      ).map((p) => p.id),
+      distritos: (
+        await prisma.distrito.findMany({ orderBy: { name: "asc" } })
+      ).map((d) => d.id),
+      bairros: (
+        await prisma.bairro.findMany({ orderBy: { name: "asc" } })
+      ).map((b) => b.id),
+      quarteiroes: (
+        await prisma.quarteirao.findMany({ orderBy: { name: "asc" } })
+      ).map((q) => q.id),
+      shelters: (
+        await prisma.shelter.findMany({ orderBy: { name: "asc" } })
+      ).map((s) => s.id),
+      vizinhos: (await prisma.bairroVizinho.findMany())
+        .map((v) => `${v.bairroAId}:${v.bairroBId}`)
+        .sort(),
+    });
+
+    const first = await collectIds();
+
+    await runSeed(prisma);
+
+    const second = await collectIds();
+    expect(second).toEqual(first);
+  });
 });

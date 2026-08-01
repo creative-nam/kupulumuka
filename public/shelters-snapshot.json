@@ -1,227 +1,227 @@
 [
   {
-    "id": "7334f37e-f0c4-4231-a414-db61f9ae8f52",
+    "id": "ed4804c0-f604-515c-a5ad-404267b303f3",
     "name": "Administração de Boane",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. da Administração, edifício sede do município. Salão nobre no piso térreo.",
-    "quarteiraoId": "f3cef0a2-ab70-4686-acf7-5ceb2fc995c1",
-    "bairroId": "cbd430ba-7518-4ca0-a07b-5f4559c306b9"
+    "quarteiraoId": "ac04d3fa-fcba-5cbd-a56c-320ae81125e6",
+    "bairroId": "4a4f92b2-548b-5c8d-9170-852d2c097d9b"
   },
   {
-    "id": "d7eb5f2e-1eba-41ae-a491-44c5a53bf5bf",
+    "id": "d62ac547-21fd-5e9d-a119-7d3548bbcf2f",
     "name": "Armazém da Gare",
     "tier": "COMMUNITY",
     "capacityStatus": "FULL",
     "routeDescription": "Rua da Estação, antigo armazém ao lado da linha férrea.",
-    "quarteiraoId": "4fce4727-36af-4953-8944-14b1cb97e68b",
-    "bairroId": "5db07dbb-c232-4aee-be50-f591cc17f844"
+    "quarteiraoId": "1aaf9f13-c3a3-5dac-a0d1-de0d685bf947",
+    "bairroId": "0c41f9e1-ae5c-50c9-8037-1865c9cb0a64"
   },
   {
-    "id": "06839461-11d7-44b1-b736-c069b80678f4",
+    "id": "0b541bc2-933a-5723-a15d-a425922d9ff0",
     "name": "Associação Comunitária Coop",
     "tier": "COMMUNITY",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Rua das Flores, nº 45. Sala no primeiro andar.",
-    "quarteiraoId": "0ec6697f-de54-4491-b846-b7a694aec974",
-    "bairroId": "f4e5f8ed-3d12-455a-b556-58640e7b6106"
+    "quarteiraoId": "c7c043e8-dbbe-5adf-be9c-ccaf7faf1ac1",
+    "bairroId": "fde5c6a0-8ac3-5d4e-baf8-5c12fc498ed6"
   },
   {
-    "id": "fe8c68ec-b18a-445c-b7f4-3729f099fd27",
+    "id": "6804193f-66b4-5275-bb4d-1672e6780ee4",
     "name": "Associação de Agricultores de Conhane",
     "tier": "COMMUNITY",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Estrada do Chókwè ao Xai-Xai, km 8. Armazém com telhado vermelho.",
-    "quarteiraoId": "0b279173-16cd-4392-a3fa-6f79e1311d9c",
-    "bairroId": "0fa2f5a5-0210-43ec-8d80-5b2bf5f63d34"
+    "quarteiraoId": "dda425e5-2025-58d3-88ba-8f4857a6c0d0",
+    "bairroId": "8e146fe3-37ae-5b84-8383-f8de0bc0551d"
   },
   {
-    "id": "043308cb-8ddb-4d91-a397-bc8cdb0cde2b",
+    "id": "52fef119-738a-581a-8f69-f7327a1c5e47",
     "name": "Centro Comunitário de Lionde",
     "tier": "COMMUNITY",
     "capacityStatus": "NEARLY_FULL",
     "routeDescription": "Rua de Lionde, a 500m da EN1. Edifício pintado de verde.",
-    "quarteiraoId": "94ef94b4-7408-4f3f-8ad0-63d56ff19fad",
-    "bairroId": "ee31aacc-9b9d-4ef9-895d-5d2aa74eb45e"
+    "quarteiraoId": "1ff35305-ae3d-538f-94eb-0f0ac4a58a8e",
+    "bairroId": "c431b31d-1a97-55a4-a067-0272d8419bdb"
   },
   {
-    "id": "b2f6b5e6-a576-41e4-b400-7dda7e9fa384",
+    "id": "ff91e033-5aa0-5318-8082-55620fbe1f4f",
     "name": "Centro de Saúde Alto Maé",
     "tier": "OFFICIAL",
     "capacityStatus": "NEARLY_FULL",
     "routeDescription": "Rua da Resistência, ao lado do Mercado do Alto Maé. Porta verde.",
-    "quarteiraoId": "37cf1b85-8ee0-4eaa-81de-a47027078cd4",
-    "bairroId": "ec325d1d-a25a-4c9f-ab62-d524df0350be"
+    "quarteiraoId": "e6e92588-f4d4-52fe-a841-bbde1d819a7f",
+    "bairroId": "cae0df0e-bfd2-5de2-889c-1f35f0a31acd"
   },
   {
-    "id": "7e643dee-bebe-476a-bec9-4c162e462ee1",
+    "id": "2db9a641-099c-54ee-b5f1-9398c86364d0",
     "name": "Centro de Saúde Matacuane",
     "tier": "OFFICIAL",
     "capacityStatus": "NEARLY_FULL",
     "routeDescription": "Rua do Centro de Saúde, atrás do mercado. Placa azul na entrada.",
-    "quarteiraoId": "76a97c8a-c4bd-4699-8d69-4dfded487502",
-    "bairroId": "4773ad58-d3c4-4494-94b7-0483cb231cd5"
+    "quarteiraoId": "a315003a-1796-529e-87b8-1433aef0488b",
+    "bairroId": "5e89088f-2377-55e5-8e40-5d797486b96f"
   },
   {
-    "id": "d67214c4-ecc6-4866-b3a5-ca19c119aec4",
+    "id": "78a8c651-19ff-5f5a-94d1-ca0cc5b8b42b",
     "name": "Centro Polivalente T-3",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. Moçambique, rotunda do T-3, edifício amarelo.",
-    "quarteiraoId": "924092e3-d58c-459b-b0f4-32efe0893f7d",
-    "bairroId": "69f77959-59f5-4d38-81a1-f0c1bde34757"
+    "quarteiraoId": "cfe968bb-9ff6-58bd-a855-897f967db8cd",
+    "bairroId": "d0581a29-fa6f-5732-9b89-1e61570a9290"
   },
   {
-    "id": "92044824-6e76-4c20-bd46-5db4e915ef14",
+    "id": "7b87d0a5-5663-510e-b0e3-4177d36d2240",
     "name": "EPC Khongolote",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. da Liberdade, perto do campo de futebol. Portão principal aberto.",
-    "quarteiraoId": "b26b1100-8945-4945-85f1-acb559a6c98b",
-    "bairroId": "588c6ec6-399f-42fb-87e3-769d4bbc8440"
+    "quarteiraoId": "48a14e77-3a5a-53a5-b811-07cf80700dd7",
+    "bairroId": "67dbc54f-775e-55ee-a0f4-39c2253bf973"
   },
   {
-    "id": "e07cffcc-ee2a-4dc1-82c7-4952ce7b261c",
+    "id": "e4b6d58e-7696-5968-839f-6da2692a34f1",
     "name": "Escola Primária Central",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. 25 de Setembro, em frente ao Mercado Central. Entrada pelo portão principal.",
-    "quarteiraoId": "347d474c-8082-4e51-bdb2-3874783fc5a4",
-    "bairroId": "36d2073d-fed1-43ea-b97e-5bef00a8b555"
+    "quarteiraoId": "6c3ca9ed-a00a-564c-91b5-fa93e9f079f9",
+    "bairroId": "64833031-6876-5fbe-bd96-e9853a25a53d"
   },
   {
-    "id": "83714280-5d48-405c-9318-e0a4ab987d19",
+    "id": "e9e9d853-ad29-5f3f-96d0-73819797e880",
     "name": "Escola Primária de Beluluane",
     "tier": "OFFICIAL",
     "capacityStatus": "FULL",
     "routeDescription": "Estrada Nacional EN4, km 15, ao lado da ponte. Portão vermelho.",
-    "quarteiraoId": "ccd23611-f149-4048-8c90-88cc7e6f3dc0",
-    "bairroId": "e04ea342-b097-46f3-9b0b-a12298f66f37"
+    "quarteiraoId": "200fe0d2-32db-5178-b900-3b19756026aa",
+    "bairroId": "30cfe1a1-7d41-5719-859f-2c5ba26ce589"
   },
   {
-    "id": "efd6b5ed-308a-4011-a7e2-bb457da80e63",
+    "id": "fc390b56-535b-580c-80e0-03e7fee84d57",
     "name": "Escola Primária de Munhava",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. Principal de Munhava, subida após o mercado informal.",
-    "quarteiraoId": "594ee88e-0d32-49ae-b704-57db520f3b29",
-    "bairroId": "2250fcff-93b2-4d83-a2fb-3a8ab81a7ec2"
+    "quarteiraoId": "e5f19e49-16d7-5669-b806-2fe4d148c2dd",
+    "bairroId": "81116c02-e3dc-5843-933c-ca19d5d80a68"
   },
   {
-    "id": "d032b79c-e0a7-4389-9ccd-82b33d4157c1",
+    "id": "8914abcd-71b3-55fa-8947-d98a64b3bc38",
     "name": "Escola Primária de Xilembene",
     "tier": "OFFICIAL",
     "capacityStatus": "FULL",
     "routeDescription": "Rua Principal de Xilembene, ao lado da loja do Sr. António.",
-    "quarteiraoId": "92560762-4c24-496f-aafb-b436b690d63f",
-    "bairroId": "7c90c419-a640-402a-9bdc-04c4c969da35"
+    "quarteiraoId": "01641993-9e44-5140-91e6-0e004c5c7b3a",
+    "bairroId": "6864509e-5181-522f-95a9-35f5a259dcc2"
   },
   {
-    "id": "511ec7f5-173d-4b6c-b6b1-8a44f2258b5b",
+    "id": "dd8e5bed-8f64-5edd-b1c6-0687b846b9d8",
     "name": "Escola Primária do Fomento",
     "tier": "OFFICIAL",
     "capacityStatus": "NEARLY_FULL",
     "routeDescription": "Rua do Comércio, bairro do Fomento, ao lado da padaria.",
-    "quarteiraoId": "e611e939-2ff0-4b2d-a755-200002cfce65",
-    "bairroId": "b8fefe9f-4538-4f40-b344-e9953cac36f5"
+    "quarteiraoId": "28659e72-7d64-537d-a022-d24b77b3ebfc",
+    "bairroId": "49bd020f-96cc-51e9-9b82-a44e98828862"
   },
   {
-    "id": "db1b450a-881d-401e-9d29-ebc84e9469b8",
+    "id": "3ed58952-07d0-5ee3-9d4e-53f907fa37fb",
     "name": "Escola Secundária da Ponta-Gêa",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. Marginal, perto do farol. Edifício de três pisos.",
-    "quarteiraoId": "6d052e0c-62c0-4c63-ae94-d7857e9aef74",
-    "bairroId": "69b88336-d88d-4da0-8481-3b8a5de3ea47"
+    "quarteiraoId": "123384f9-ad84-5461-917e-d5678a5bafa9",
+    "bairroId": "3dc1e675-219f-5ae2-87f6-3c91e0ca3d77"
   },
   {
-    "id": "f6e45ef9-9de8-4779-bdae-bb7411803a98",
+    "id": "cc3df413-8203-5529-a200-fefffc5eb320",
     "name": "Escola Secundária de Chókwè",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. da Independência, ao lado do Hospital Rural. Portão principal.",
-    "quarteiraoId": "f6423703-a418-4d60-9e95-3b124c173cea",
-    "bairroId": "0708df9a-ec8b-4297-8469-5b3d0ee874d8"
+    "quarteiraoId": "563f0508-cc4f-5b94-bb8c-91de428c61b9",
+    "bairroId": "05794033-3b97-5db9-90a6-2ff5769194c8"
   },
   {
-    "id": "a604e635-73da-45ee-8b7f-21858709bc67",
+    "id": "46042215-d69e-5c36-bbe5-09afcad9349b",
     "name": "Escola Secundária Malhangalene",
     "tier": "OFFICIAL",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. da Marginal, após o semáforo do Hotel Polana. Entrada lateral.",
-    "quarteiraoId": "4236aaa8-8fc7-43a9-aea2-2dd72934d454",
-    "bairroId": "df0eaf05-7915-4baf-a21b-097e193e77c1"
+    "quarteiraoId": "9916b228-8642-5550-9485-797154d9cc2a",
+    "bairroId": "42162d5e-8697-5d14-ac30-b586534ed61d"
   },
   {
-    "id": "97f36b6b-18d1-4d4f-bb34-ace3b1456055",
+    "id": "7ad16f4b-2ecc-5be6-be07-ec160b0efeca",
     "name": "Igreja Católica",
     "tier": "OFFICIAL",
     "capacityStatus": "NEARLY_FULL",
     "routeDescription": "Rua da Igreja, ao lado do mercado do Khongolote. Campanário visível.",
-    "quarteiraoId": "b26b1100-8945-4945-85f1-acb559a6c98b",
-    "bairroId": "588c6ec6-399f-42fb-87e3-769d4bbc8440"
+    "quarteiraoId": "48a14e77-3a5a-53a5-b811-07cf80700dd7",
+    "bairroId": "67dbc54f-775e-55ee-a0f4-39c2253bf973"
   },
   {
-    "id": "331456a5-db0b-4037-aadf-28faca7f782f",
+    "id": "63220509-878d-5b4f-970a-3211b93b2f67",
     "name": "Igreja de Macarretane",
     "tier": "COMMUNITY",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Estrada para o regadio, ao lado da ponte sobre o Rio Limpopo.",
-    "quarteiraoId": "80369bce-3f58-4306-8b63-9c8f49de52bb",
-    "bairroId": "d4fccbb7-48a7-47fa-ae0c-3ea722718bbe"
+    "quarteiraoId": "1d5e32f6-3ce3-57b3-88e5-32cf88abf891",
+    "bairroId": "7a2e20f0-b6ce-58e5-8029-fc30b8d6c9e2"
   },
   {
-    "id": "579e4437-abd8-4ebe-91b3-ee9aae0451bb",
+    "id": "977decdb-b8a4-57f4-b841-fbe17c140b0f",
     "name": "Igreja de Macuti",
     "tier": "COMMUNITY",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Av. do Aeroporto, ao lado do cemitério de Macuti. Portão grande de ferro.",
-    "quarteiraoId": "b20fb130-dc7a-4fb4-982f-b975f35cc174",
-    "bairroId": "e3adee9a-5130-47ac-bc0b-2f2c814a839c"
+    "quarteiraoId": "51613e24-42c7-52a3-8a4b-eb797ab8bb7d",
+    "bairroId": "f0a0abcb-383a-584e-a8df-daad578a55a5"
   },
   {
-    "id": "7ae24a79-33c9-4d5c-b588-dd8939ff3031",
+    "id": "b8a86c37-2e60-57d0-9056-6e5e4733c4d2",
     "name": "Igreja Evangélica de Boane",
     "tier": "COMMUNITY",
     "capacityStatus": "NEARLY_FULL",
     "routeDescription": "Rua da Igreja, a 200m do mercado municipal. Cruz azul na fachada.",
-    "quarteiraoId": "f3cef0a2-ab70-4686-acf7-5ceb2fc995c1",
-    "bairroId": "cbd430ba-7518-4ca0-a07b-5f4559c306b9"
+    "quarteiraoId": "ac04d3fa-fcba-5cbd-a56c-320ae81125e6",
+    "bairroId": "4a4f92b2-548b-5c8d-9170-852d2c097d9b"
   },
   {
-    "id": "8d94c02e-45fa-4acd-ac36-2e60fd3d5988",
+    "id": "4e4618d0-5fb2-5be9-972a-5dcc220c432c",
     "name": "Igreja São Francisco",
     "tier": "OFFICIAL",
     "capacityStatus": "FULL",
     "routeDescription": "Av. Kwame Nkrumah, próximo ao Hospital Central. Portão azul à direita.",
-    "quarteiraoId": "abc2facd-d4d8-4c83-83f1-8fe2d14bfe93",
-    "bairroId": "982f9137-5649-4c8d-b5ff-ac269bd9663e"
+    "quarteiraoId": "419f9b46-9757-5432-97fa-bae15667efeb",
+    "bairroId": "7ba7f194-bf91-54e4-a458-7e3d60f7fa23"
   },
   {
-    "id": "3386669d-4bd6-44d4-b363-b7c17a60e993",
+    "id": "6f0a5fef-c66e-55e6-b611-17e31d7cb0b9",
     "name": "Mesquita de Tsalala",
     "tier": "COMMUNITY",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Rua Principal de Tsalala, edifício branco com minarete.",
-    "quarteiraoId": "5945f3c9-50ec-45ce-9c81-930a0308dfe8",
-    "bairroId": "f71b1bb3-bb63-4a91-b733-c779a22e8e49"
+    "quarteiraoId": "7da12ab3-70a6-5ec7-ae5c-3411f66886f9",
+    "bairroId": "0c4d514a-5267-5f7d-a3f2-f39c35fae907"
   },
   {
-    "id": "66bf5bbc-b9f7-4f70-a237-9921e44deb72",
+    "id": "eac878de-98f6-53f3-9b5a-3c4ca3ddfc35",
     "name": "Polidesportivo do Estoril",
     "tier": "OFFICIAL",
     "capacityStatus": "FULL",
     "routeDescription": "Rua do Estoril, campo coberto ao lado da escola.",
-    "quarteiraoId": "93b814f3-5e31-4e69-a50c-2fade602b6b8",
-    "bairroId": "bbb59757-3211-4103-af3d-bf6d6af487f0"
+    "quarteiraoId": "85dbbe62-2c13-5a8f-bd50-27a3bae920c7",
+    "bairroId": "507bd49e-a21f-5d1b-83ac-54eb0bbd5c5b"
   },
   {
-    "id": "6d14f498-1276-47b6-b23f-cac72deeafde",
+    "id": "a08c4b74-da92-5d38-a3dd-d154e1368d78",
     "name": "Salão Paroquial S. João",
     "tier": "COMMUNITY",
     "capacityStatus": "AVAILABLE",
     "routeDescription": "Rua de São João, nº 123, após a curva do mercado. Portão branco.",
-    "quarteiraoId": "b26b1100-8945-4945-85f1-acb559a6c98b",
-    "bairroId": "588c6ec6-399f-42fb-87e3-769d4bbc8440"
+    "quarteiraoId": "48a14e77-3a5a-53a5-b811-07cf80700dd7",
+    "bairroId": "67dbc54f-775e-55ee-a0f4-39c2253bf973"
   }
 ]

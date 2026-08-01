@@ -89,37 +89,37 @@ test.describe("Cold start offline (service worker precaching)", () => {
     const userDataDir = mkdtempSync(join(tmpdir(), "kupulumuka-abrigos-sw-"));
     const khongoloteShelters = [
       {
-        id: "92044824-6e76-4c20-bd46-5db4e915ef14",
+        id: "7b87d0a5-5663-510e-b0e3-4177d36d2240",
         name: "EPC Khongolote",
         tier: "OFFICIAL",
         capacityStatus: "AVAILABLE",
         routeDescription:
           "Av. da Liberdade, perto do campo de futebol. Portão principal aberto.",
-        quarteiraoId: "b26b1100-8945-4945-85f1-acb559a6c98b",
+        quarteiraoId: "48a14e77-3a5a-53a5-b811-07cf80700dd7",
         quarteiraoName: "Quarteirão 12",
         bairroName: "Khongolote",
         fromNeighboringBairro: false,
       },
       {
-        id: "97f36b6b-18d1-4d4f-bb34-ace3b1456055",
+        id: "7ad16f4b-2ecc-5be6-be07-ec160b0efeca",
         name: "Igreja Católica",
         tier: "OFFICIAL",
         capacityStatus: "NEARLY_FULL",
         routeDescription:
           "Rua da Igreja, ao lado do mercado do Khongolote. Campanário visível.",
-        quarteiraoId: "b26b1100-8945-4945-85f1-acb559a6c98b",
+        quarteiraoId: "48a14e77-3a5a-53a5-b811-07cf80700dd7",
         quarteiraoName: "Quarteirão 12",
         bairroName: "Khongolote",
         fromNeighboringBairro: false,
       },
       {
-        id: "6d14f498-1276-47b6-b23f-cac72deeafde",
+        id: "a08c4b74-da92-5d38-a3dd-d154e1368d78",
         name: "Salão Paroquial S. João",
         tier: "COMMUNITY",
         capacityStatus: "AVAILABLE",
         routeDescription:
           "Rua de São João, nº 123, após a curva do mercado. Portão branco.",
-        quarteiraoId: "b26b1100-8945-4945-85f1-acb559a6c98b",
+        quarteiraoId: "48a14e77-3a5a-53a5-b811-07cf80700dd7",
         quarteiraoName: "Quarteirão 12",
         bairroName: "Khongolote",
         fromNeighboringBairro: false,

@@ -1,5 +1,6 @@
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { stableId } from "../scripts/lib/deterministic-id";
 
 type ProvinciaSeed = {
   name: string;
@@ -390,13 +391,17 @@ export async function runSeed(prisma: PrismaClient) {
 
   for (const provincia of data) {
     const createdProvincia = await prisma.provincia.create({
-      data: { name: provincia.name },
+      data: {
+        id: stableId("provincia", provincia.name),
+        name: provincia.name,
+      },
     });
     console.log(`Provincia: ${createdProvincia.name}`);
 
     for (const distrito of provincia.distritos) {
       const createdDistrito = await prisma.distrito.create({
         data: {
+          id: stableId("distrito", provincia.name, distrito.name),
           name: distrito.name,
           provinciaId: createdProvincia.id,
         },
@@ -413,6 +418,7 @@ export async function runSeed(prisma: PrismaClient) {
       for (const bairro of distrito.bairros) {
         const createdBairro = await prisma.bairro.create({
           data: {
+            id: stableId("bairro", provincia.name, distrito.name, bairro.name),
             name: bairro.name,
             distritoId: createdDistrito.id,
           },
@@ -424,6 +430,13 @@ export async function runSeed(prisma: PrismaClient) {
         for (const qName of bairro.quarteiroes) {
           const createdQ = await prisma.quarteirao.create({
             data: {
+              id: stableId(
+                "quarteirao",
+                provincia.name,
+                distrito.name,
+                bairro.name,
+                qName,
+              ),
               name: qName,
               bairroId: createdBairro.id,
             },
@@ -445,6 +458,13 @@ export async function runSeed(prisma: PrismaClient) {
 
           await prisma.shelter.create({
             data: {
+              id: stableId(
+                "shelter",
+                provincia.name,
+                distrito.name,
+                bairro.name,
+                shelterData.name,
+              ),
               name: shelterData.name,
               tier: shelterData.tier,
               capacityStatus: shelterData.capacityStatus,
