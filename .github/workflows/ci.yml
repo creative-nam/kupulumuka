@@ -53,6 +53,7 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     env:
+      DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
       DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       TEST_DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
     steps:
