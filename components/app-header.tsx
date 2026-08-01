@@ -59,7 +59,8 @@ export function AppHeader() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 flex h-[52px] items-center justify-between border-b border-border-default bg-surface px-4">
+    <header className="fixed top-0 inset-x-0 z-50 flex items-center justify-between border-b border-border-default bg-surface px-4"
+      style={{ height: "var(--header-height)" }}>
       <Link
         href="/explorar"
         className="font-fraunces text-[16px] font-semibold text-accent-brand hover:opacity-80"

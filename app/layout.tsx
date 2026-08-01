@@ -27,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt" suppressHydrationWarning>
-      <body className={`${fraunces.variable} antialiased`}>
+      <body className={`${fraunces.variable} antialiased pt-[--header-height]`}>
         <ThemeScript />
         <SyncOnLoad />
         <ServiceWorkerRegister />
