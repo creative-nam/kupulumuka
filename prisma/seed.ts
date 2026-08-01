@@ -490,9 +490,12 @@ export async function runSeed(prisma: PrismaClient) {
       for (const bairroInfo of bairroInfos) {
         for (const vizinhoName of bairroInfo.vizinhos) {
           const vizinhoId = bairroIdByName.get(vizinhoName);
-          if (vizinhoId) {
-            pairs.push({ bairroAId: bairroInfo.id, bairroBId: vizinhoId });
+          if (!vizinhoId) {
+            throw new Error(
+              `Vizinho "${vizinhoName}" (referenced by "${bairroInfo.name}" in distrito "${distrito.name}") not found — cross-distrito neighbours are not supported because bairroIdByName is scoped to the current distrito`,
+            );
           }
+          pairs.push({ bairroAId: bairroInfo.id, bairroBId: vizinhoId });
         }
       }
 
@@ -611,7 +614,7 @@ async function main() {
   await prisma.$disconnect();
 }
 
-if (process.argv[1]?.endsWith("prisma/seed.ts")) {
+if (process.argv[1]?.replace(/\\/g, "/").endsWith("prisma/seed.ts")) {
   main()
     .then(() => {
       process.exit(0);
