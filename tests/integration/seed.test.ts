@@ -363,6 +363,12 @@ describe("Seed data integration", () => {
     expect(tiers).toEqual(expect.arrayContaining(["OFFICIAL", "COMMUNITY"]));
   });
 
+  it("rejects inserts where both phone and email are null via DB constraint", async () => {
+    await expect(
+      prisma.$executeRaw`INSERT INTO "User" (id, name, role, "verificationStatus", "createdAt", "updatedAt") VALUES (gen_random_uuid(), 'violator', 'CITIZEN'::"UserRole", 'UNVERIFIED'::"VerificationStatus", NOW(), NOW())`,
+    ).rejects.toThrow();
+  });
+
   it("re-seeding produces identical ids for every geographic row and shelter", async () => {
     const collectIds = async () => ({
       provincias: (

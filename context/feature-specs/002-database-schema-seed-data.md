@@ -24,7 +24,7 @@ Define the Prisma schema for the geographic hierarchy and core domain entities (
 
 **Capacity status and tier are enums, English internally** (`AVAILABLE` / `NEARLY_FULL` / `FULL`; `OFFICIAL` / `COMMUNITY`), per the naming split in `code-standards.md` — Portuguese display strings belong in a localization layer, not in the enum values themselves.
 
-`User.phone` **and** `User.email` **are both optional but distinct identity paths** — a community-lane user has a phone, no email; an institutional-lane user has an email, no phone. Neither is globally required; a row must have at least one, but that constraint is documented here for the future auth unit to enforce at the application layer (Prisma doesn't cleanly express "at least one of two nullable columns" as a schema-level constraint).
+`User.phone` **and** `User.email` **are both optional but distinct identity paths** — a community-lane user has a phone, no email; an institutional-lane user has an email, no phone. Neither is globally required; a row must have at least one, enforced by a database-level `CHECK` constraint (`CHECK (phone IS NOT NULL OR email IS NOT NULL)`) applied via migration `20260801000000_add_user_contact_check`, with application-layer validation in `lib/db/user-validation.ts` as a user-facing backstop (throws `UserContactError` with a descriptive message before the DB rejects).
 
 **Seed data breadth is deliberate, not incidental.** Rather than a single-neighborhood dataset, seed across three real, flood-relevant regions so Phase 1 (search, adjacency routing) has enough surface area to actually test cross-bairro and cross-province behavior without needing to touch the seed script again:
 

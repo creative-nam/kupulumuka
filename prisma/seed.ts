@@ -1,6 +1,7 @@
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { stableId } from "../scripts/lib/deterministic-id";
+import { validateUserContact } from "../lib/db/user-validation";
 
 type ProvinciaSeed = {
   name: string;
@@ -548,6 +549,7 @@ async function createUsers(prisma: PrismaClient) {
   ];
 
   for (const user of institutionalUsers) {
+    validateUserContact(user);
     await prisma.user.upsert({
       where: { email: user.email! },
       update: {},
@@ -593,6 +595,7 @@ async function createUsers(prisma: PrismaClient) {
   ];
 
   for (const user of communityUsers) {
+    validateUserContact(user);
     await prisma.user.upsert({
       where: { phone: user.phone! },
       update: {},
