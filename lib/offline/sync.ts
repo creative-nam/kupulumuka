@@ -1,4 +1,5 @@
 import { getDb } from "./db";
+import { fetchWithTimeout } from "./fetch-with-timeout";
 import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
 import type { SheltersSnapshotItem } from "@/scripts/generate-shelters-snapshot";
 import type { AdjacencyPairRecord } from "./db";
@@ -7,9 +8,9 @@ type AdjacencyResponse = { bairroAId: string; bairroBId: string }[];
 
 export async function syncData(): Promise<{ lastSyncedAt: string }> {
   const [geoRes, sheltersRes, adjacencyRes] = await Promise.all([
-    fetch("/geo-snapshot.json"),
-    fetch("/shelters-snapshot.json"),
-    fetch("/api/adjacency"),
+    fetchWithTimeout("/geo-snapshot.json"),
+    fetchWithTimeout("/shelters-snapshot.json"),
+    fetchWithTimeout("/api/adjacency"),
   ]);
 
   if (!geoRes.ok || !sheltersRes.ok || !adjacencyRes.ok) {

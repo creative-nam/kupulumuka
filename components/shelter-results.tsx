@@ -5,6 +5,7 @@ import { BackNav } from "./back-nav";
 import { ShelterCard } from "./shelter-card";
 import { Button } from "@/components/ui/button";
 import { getCachedShelters } from "@/lib/offline/query";
+import { fetchWithTimeout } from "@/lib/offline/fetch-with-timeout";
 import type { ShelterSearchResult } from "@/lib/shelters/search";
 
 function EmptyState() {
@@ -71,7 +72,7 @@ export function ShelterResults({
 
     async function fetchShelters() {
       try {
-        const res = await fetch(
+        const res = await fetchWithTimeout(
           `/api/shelters?quarteiraoId=${encodeURIComponent(quarteiraoId)}`,
         );
         if (!res.ok) throw new Error("Fetch failed");

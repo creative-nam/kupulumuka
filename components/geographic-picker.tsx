@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getCachedGeoSnapshot, getLastSyncedAt } from "@/lib/offline/query";
+import { fetchWithTimeout } from "@/lib/offline/fetch-with-timeout";
 import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
 
 type Selection = {
@@ -111,7 +112,7 @@ export function GeographicPicker() {
   const loadSnapshot = React.useCallback(async () => {
     setError(false);
     try {
-      const res = await fetch("/geo-snapshot.json");
+      const res = await fetchWithTimeout("/geo-snapshot.json");
       if (!res.ok) throw new Error();
       const data: GeoSnapshot = await res.json();
       setSnapshot(data);

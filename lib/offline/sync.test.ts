@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import "fake-indexeddb/auto";
 import { getDb, resetDb } from "./db";
 import { syncData } from "./sync";
+import { DEFAULT_FETCH_TIMEOUT_MS } from "./fetch-with-timeout";
 
 const mockGeoSnapshot = {
   provincias: [
@@ -68,6 +69,7 @@ const mockFetchAdjacency = vi.fn().mockResolvedValue({
 
 describe("syncData", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     resetDb();
     vi.restoreAllMocks();
     global.fetch = vi.fn().mockImplementation((url: string) => {
@@ -151,6 +153,35 @@ describe("syncData", () => {
     mockFetchAdjacency.mockResolvedValueOnce({ ok: false, status: 500 });
 
     await expect(syncData()).rejects.toThrow("Failed to fetch sync data");
+  });
+
+  it("rejects instead of hanging forever when a sync fetch never settles", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      global.fetch = vi.fn((url: RequestInfo | URL, init?: RequestInit) => {
+        if (url === "/geo-snapshot.json") {
+          return new Promise((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(
+                new DOMException("The operation was aborted", "AbortError"),
+              ),
+            );
+          });
+        }
+        if (url === "/shelters-snapshot.json") return mockFetchShelters();
+        if (url === "/api/adjacency") return mockFetchAdjacency();
+        return Promise.reject(new Error(`Unexpected URL: ${url}`));
+      });
+
+      const promise = syncData();
+      const rejection = expect(promise).rejects.toThrow();
+
+      await vi.advanceTimersByTimeAsync(DEFAULT_FETCH_TIMEOUT_MS);
+
+      await rejection;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("re-syncs and updates timestamp when going back online after a cached session", async () => {

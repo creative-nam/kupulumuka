@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { GeographicPicker } from "./geographic-picker";
+import { DEFAULT_FETCH_TIMEOUT_MS } from "@/lib/offline/fetch-with-timeout";
 
 const mockPush = vi.fn();
 
@@ -91,6 +92,7 @@ async function selectOption(
 
 describe("GeographicPicker", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     mockGetCachedGeoSnapshot.mockReset();
     mockGetLastSyncedAt.mockReset();
@@ -393,6 +395,35 @@ describe("GeographicPicker", () => {
     await selectOption(user, "Província", "Província A");
 
     expect(screen.getByLabelText("Distrito")).not.toBeDisabled();
+  });
+
+  it("falls back to cached snapshot when the snapshot fetch hangs instead of settling", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      global.fetch = vi.fn(
+        (_url: RequestInfo | URL, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("The operation was aborted", "AbortError")),
+            );
+          }),
+      );
+      mockGetCachedGeoSnapshot.mockResolvedValue(mockSnapshot);
+      mockGetLastSyncedAt.mockResolvedValue("2025-01-15T10:30:00.000Z");
+
+      render(<GeographicPicker />);
+      expect(screen.getByText("A carregar...")).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEFAULT_FETCH_TIMEOUT_MS);
+      });
+
+      expect(screen.getByLabelText("Província")).toBeInTheDocument();
+      expect(screen.getByText(/Sem ligação/)).toBeInTheDocument();
+      expect(screen.getByText(/última atualização/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows error state when both fetch and cache fail", async () => {

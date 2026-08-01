@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { ShelterResults } from "./shelter-results";
+import { DEFAULT_FETCH_TIMEOUT_MS } from "@/lib/offline/fetch-with-timeout";
 
 const mockPush = vi.fn();
 
@@ -60,6 +61,7 @@ vi.mock("@/lib/offline/query", () => ({
 
 describe("ShelterResults", () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     mockGetCachedShelters.mockReset();
   });
@@ -148,6 +150,34 @@ describe("ShelterResults", () => {
     await waitFor(() => {
       expect(screen.getByText("EPC Khongolote")).toBeInTheDocument();
     });
+  });
+
+  it("falls back to cache when the live fetch hangs instead of settling", async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    try {
+      global.fetch = vi.fn(
+        (_url: RequestInfo | URL, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener("abort", () =>
+              reject(new DOMException("The operation was aborted", "AbortError")),
+            );
+          }),
+      );
+      mockGetCachedShelters.mockResolvedValue(mockCachedShelters);
+
+      render(<ShelterResults quarteiraoId="q1" />);
+      expect(screen.getByText("A carregar...")).toBeInTheDocument();
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEFAULT_FETCH_TIMEOUT_MS);
+      });
+
+      expect(screen.getByText("Abrigo Cache")).toBeInTheDocument();
+      expect(screen.getByText(/Sem ligação/)).toBeInTheDocument();
+      expect(screen.getByText(/última atualização/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("shows empty state when live fetch returns empty array", async () => {
