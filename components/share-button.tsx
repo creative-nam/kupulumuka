@@ -2,7 +2,10 @@
 
 import * as React from "react";
 
-async function shareOrClipboard(shelterName: string, routeDescription: string) {
+async function shareOrClipboard(
+  shelterName: string,
+  routeDescription: string,
+): Promise<"shared" | "copied" | "failed"> {
   const shareText = `Abrigo: ${shelterName}\n${routeDescription}\n\n— Kupulumuka`;
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
@@ -11,15 +14,28 @@ async function shareOrClipboard(shelterName: string, routeDescription: string) {
         title: shelterName,
         text: shareText,
       });
-      return;
-    } catch {
-      // AbortError is thrown when user dismisses the share dialog — don't fall
-      // back to clipboard in that case, since the user explicitly cancelled.
-      return;
+      return "shared";
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return "failed";
+      }
     }
   }
 
-  await navigator.clipboard.writeText(shareText);
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.clipboard ||
+    typeof navigator.clipboard.writeText !== "function"
+  ) {
+    return "failed";
+  }
+
+  try {
+    await navigator.clipboard.writeText(shareText);
+    return "copied";
+  } catch {
+    return "failed";
+  }
 }
 
 export function ShareButton({
@@ -32,11 +48,9 @@ export function ShareButton({
   const [copied, setCopied] = React.useState(false);
 
   const handleShare = React.useCallback(async () => {
-    await shareOrClipboard(shelterName, routeDescription);
+    const outcome = await shareOrClipboard(shelterName, routeDescription);
 
-    const canShare =
-      typeof navigator !== "undefined" && typeof navigator.share === "function";
-    if (!canShare) {
+    if (outcome === "copied") {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
