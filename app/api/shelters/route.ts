@@ -11,6 +11,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const shelters = await getSheltersForQuarteirao(quarteiraoId);
-  return NextResponse.json(shelters);
+  try {
+    const shelters = await getSheltersForQuarteirao(quarteiraoId);
+    return NextResponse.json(shelters);
+  } catch (error) {
+    console.error("getSheltersForQuarteirao failed:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
+  }
 }
