@@ -20,7 +20,7 @@ Community shelter registration and capacity updates, phone-based alert subscript
 
 - **Next.js 15** (App Router) + TypeScript, strict mode
 - **PostgreSQL** (via Supabase) + **Prisma**
-- **next-pwa (Workbox)** for offline precaching, **Dexie.js** for client-side data caching
+- **workbox-build (`generateSW`, via `scripts/generate-sw.ts`)** for service-worker precaching, **Dexie.js** for client-side data caching
 - **Tailwind CSS** + **shadcn/ui**, themed to a custom warm/community-oriented design system
 - **Vitest** + **React Testing Library** (unit/integration), **Playwright** (e2e)
 
@@ -35,7 +35,9 @@ npm install
 Copy `.env.example` to `.env` and fill in your own Supabase connection strings (`DATABASE_URL`, `DIRECT_URL`) and a separate test database's `TEST_DIRECT_URL` (used by integration tests and CI — keep it distinct from your real dev database).
 
 ```bash
+npx prisma generate
 npx prisma migrate dev
+npx prisma db seed
 npm run generate:geo-snapshot
 npm run generate:shelters-snapshot
 npm run dev

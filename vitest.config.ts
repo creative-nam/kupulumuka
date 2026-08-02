@@ -9,6 +9,7 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     exclude: ["**/node_modules/**", "**/tests/e2e/**", "**/tests/integration/**", "lib/shelters/search.test.ts"],
     globals: true,
+    env: { TZ: "UTC" },
   },
   resolve: {
     alias: {

@@ -53,7 +53,7 @@ Capacity color always means capacity. Do not reuse these hues for unrelated succ
 | Badge | Light bg / text | Dark bg / text |
 |---|---|---|
 | Tier 1 — "Oficial" | `#E1EEF4` / `#1F5C7A` | `#16344A` / `#7FB8DA` |
-| Tier 2 — "Comunitário" | `#EFE7D5` / `#8A7A5E` | `#3A331F` / `#C9B989` |
+| Tier 2 — "Comunitário" | `#EFE7D5` / `#6B5D4A` | `#3A331F` / `#C9B989` |
 
 ## Typography
 
