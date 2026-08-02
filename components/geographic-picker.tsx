@@ -115,31 +115,45 @@ export function GeographicPicker() {
     quarteirao: null,
   });
 
+  // Monotonic id of the latest loadSnapshot call. Each call captures its own id
+  // and checks it before touching state, so a superseded (older) call discards
+  // its result instead of overwriting a newer one — "latest wins", unlike the
+  // "first wins" in-flight dedup in lib/offline/sync.ts.
+  const requestIdRef = React.useRef(0);
+
   const loadSnapshot = React.useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     setError(false);
     try {
       const res = await fetchWithTimeout("/geo-snapshot.json");
+      if (requestId !== requestIdRef.current) return;
       if (!res.ok) throw new Error();
       const data: GeoSnapshot = await res.json();
+      if (requestId !== requestIdRef.current) return;
       setSnapshot(data);
       setIsCached(false);
       setCachedAt(null);
     } catch {
+      if (requestId !== requestIdRef.current) return;
       try {
         const cached = await getCachedGeoSnapshot();
+        if (requestId !== requestIdRef.current) return;
         if (cached) {
           setSnapshot(cached);
           setIsCached(true);
           try {
             const syncedAt = await getLastSyncedAt();
+            if (requestId !== requestIdRef.current) return;
             setCachedAt(syncedAt);
           } catch {
+            if (requestId !== requestIdRef.current) return;
             setCachedAt(null);
           }
         } else {
           setError(true);
         }
       } catch {
+        if (requestId !== requestIdRef.current) return;
         setError(true);
       }
     }

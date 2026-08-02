@@ -1,5 +1,6 @@
 import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { GeographicPicker } from "./geographic-picker";
@@ -453,6 +454,63 @@ describe("GeographicPicker", () => {
         screen.getByText("Não foi possível carregar os dados"),
       ).toBeInTheDocument();
     });
+  });
+
+  it("discards a superseded loadSnapshot result when a newer call resolves first", async () => {
+    let resolveFirst!: (value: unknown) => void;
+    const firstFetch = new Promise<unknown>((resolve) => {
+      resolveFirst = resolve;
+    });
+
+    const staleSnapshot = {
+      provincias: [{ id: "pStale", name: "Província Antiga", distritos: [] }],
+    };
+
+    // Two concurrent calls: the mount-time call's fetch stays slow, while a
+    // second (fresher) call resolves immediately.
+    global.fetch = vi
+      .fn()
+      .mockReturnValueOnce(firstFetch)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockSnapshot),
+      });
+    mockGetCachedGeoSnapshot.mockResolvedValue(null);
+
+    // StrictMode double-mounts in dev, so two loadSnapshot calls run
+    // concurrently here — the only way to overlap a mount call with a later
+    // one through the component's public surface.
+    render(
+      <StrictMode>
+        <GeographicPicker />
+      </StrictMode>,
+    );
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+
+    // The newer call resolves first and renders its snapshot.
+    const user = userEvent.setup();
+    await waitFor(() => {
+      expect(screen.getByLabelText("Província")).toBeInTheDocument();
+    });
+    await selectOption(user, "Província", "Província A");
+    expect(screen.getByLabelText("Província")).toHaveTextContent("Província A");
+
+    // Now the older, slower call resolves with stale data — its result must be
+    // discarded, not applied.
+    act(() => {
+      resolveFirst({
+        ok: true,
+        json: () => Promise.resolve(staleSnapshot),
+      });
+    });
+
+    await user.click(screen.getByLabelText("Província"));
+    const options = await screen.findAllByRole("option");
+    const names = options.map((o) => o.textContent);
+    expect(names).toContain("Província A");
+    expect(names).not.toContain("Província Antiga");
+    expect(screen.queryByText("Província Antiga")).not.toBeInTheDocument();
   });
 
   it("supports keyboard navigation to select an option", async () => {
