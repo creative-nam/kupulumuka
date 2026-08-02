@@ -147,15 +147,16 @@ export function ShelterResults({
 
   const shelters = state.shelters;
   const originBairroName = state.originBairroName;
+  const isCached = state.status === "cached";
 
   if (shelters.length === 0) {
     return (
       <main className="mx-auto flex min-h-screen flex-col px-4 py-6">
+        {isCached && <StalenessBanner lastSyncedAt={state.lastSyncedAt} />}
         <EmptyState />
       </main>
     );
   }
-  const isCached = state.status === "cached";
 
   return (
     <main className="mx-auto flex min-h-screen flex-col px-4 py-6">

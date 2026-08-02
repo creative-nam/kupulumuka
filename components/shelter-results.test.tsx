@@ -125,6 +125,29 @@ describe("ShelterResults", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows staleness banner above empty state when cached data has zero shelters", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    mockGetCachedShelters.mockResolvedValue({
+      originBairro: { id: "bairro-khongolote", name: "Khongolote" },
+      results: [],
+      lastSyncedAt: "2025-01-15T10:30:00.000Z",
+    });
+
+    render(<ShelterResults quarteiraoId="q1" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "Nenhum abrigo encontrado nesta zona. Tente outro quarteirão.",
+        ),
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Sem ligação/)).toBeInTheDocument();
+    expect(screen.getByText(/última atualização/)).toBeInTheDocument();
+    expect(screen.getByText(/15\/01\/2025/)).toBeInTheDocument();
+  });
+
   it("shows error message and retry button when live fetch fails and no cache exists", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
     mockGetCachedShelters.mockResolvedValue({
