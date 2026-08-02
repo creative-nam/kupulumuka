@@ -17,42 +17,54 @@ describe("service worker generation", () => {
     expect(content).toContain("precacheAndRoute");
   });
 
-  it("precaches app shell JS chunks at any depth", () => {
+  it("precaches every app shell JS chunk with its own revision", () => {
     const content = readFileSync(SW_PATH, "utf-8");
-    const jsMatch = content.match(
-      /\/_next\/static\/chunks\/.+\.js[^}]*revision:"[0-9a-f]{8}"/g,
-    );
-    expect(jsMatch).not.toBeNull();
-    expect(jsMatch!.length).toBeGreaterThan(0);
+    const chunkUrls = content.match(/url:"\/_next\/static\/chunks\/[^"]+\.js"/g) ?? [];
+    const chunkRevisions = content.match(
+      /url:"\/_next\/static\/chunks\/[^"]+\.js",revision:"[0-9a-f]{8}"/g,
+    ) ?? [];
+    expect(chunkUrls.length).toBeGreaterThan(0);
+    expect(chunkRevisions).toHaveLength(chunkUrls.length);
   });
 
-  it("precaches app shell CSS from any static subdirectory (chunks/ or css/)", () => {
+  it("precaches build-ID-scoped manifests (_buildManifest.js, _ssgManifest.js) with revisions", () => {
     const content = readFileSync(SW_PATH, "utf-8");
-    const cssMatch = content.match(
-      /\/_next\/static\/(?:chunks|css)\/.+\.css[^}]*revision:"[0-9a-f]{8}"/g,
+    expect(content).toMatch(
+      /url:"\/_next\/static\/[^"]+\/_buildManifest\.js",revision:"[0-9a-f]{8}"/,
     );
-    expect(cssMatch).not.toBeNull();
-    expect(cssMatch!.length).toBeGreaterThan(0);
+    expect(content).toMatch(
+      /url:"\/_next\/static\/[^"]+\/_ssgManifest\.js",revision:"[0-9a-f]{8}"/,
+    );
   });
 
-  it("precaches self-hosted font files at any depth", () => {
+  it("precaches every app shell CSS file with its own revision (chunks/ or css/)", () => {
     const content = readFileSync(SW_PATH, "utf-8");
-    expect(content).toContain("/_next/static/media/");
-    const fontMatch = content.match(
-      /\/_next\/static\/media\/.+\.woff2[^}]*revision:"[0-9a-f]{8}"/g,
-    );
-    expect(fontMatch).not.toBeNull();
-    expect(fontMatch!.length).toBeGreaterThan(0);
+    const cssUrls = content.match(/url:"\/_next\/static\/(?:chunks|css)\/[^"]+\.css"/g) ?? [];
+    const cssRevisions = content.match(
+      /url:"\/_next\/static\/(?:chunks|css)\/[^"]+\.css",revision:"[0-9a-f]{8}"/g,
+    ) ?? [];
+    expect(cssUrls.length).toBeGreaterThan(0);
+    expect(cssRevisions).toHaveLength(cssUrls.length);
+  });
+
+  it("precaches every self-hosted font file with its own revision", () => {
+    const content = readFileSync(SW_PATH, "utf-8");
+    const fontUrls = content.match(/url:"\/_next\/static\/media\/[^"]+\.woff2"/g) ?? [];
+    const fontRevisions = content.match(
+      /url:"\/_next\/static\/media\/[^"]+\.woff2",revision:"[0-9a-f]{8}"/g,
+    ) ?? [];
+    expect(fontUrls.length).toBeGreaterThan(0);
+    expect(fontRevisions).toHaveLength(fontUrls.length);
   });
 
   it("precaches the root HTML page (/)", () => {
     const content = readFileSync(SW_PATH, "utf-8");
-    expect(content).toMatch(/url:"\/"[^}]*revision:"[0-9a-f]{8}"/);
+    expect(content).toMatch(/url:"\/",revision:"[0-9a-f]{8}"/);
   });
 
   it("precaches the explorar HTML page (/explorar) for navigateFallback", () => {
     const content = readFileSync(SW_PATH, "utf-8");
-    expect(content).toMatch(/url:"\/explorar"[^}]*revision:"[0-9a-f]{8}"/);
+    expect(content).toMatch(/url:"\/explorar",revision:"[0-9a-f]{8}"/);
   });
 
   it("has StaleWhileRevalidate runtime caching for geo-snapshot.json", () => {
