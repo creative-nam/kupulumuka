@@ -51,9 +51,10 @@ afterAll(async () => {
 });
 
 describe("getSheltersForQuarteirao", () => {
-  it("returns empty array when quarteiraoId does not exist", async () => {
+  it("returns empty results and no origin bairro when quarteiraoId does not exist", async () => {
     const result = await getSheltersForQuarteirao("nonexistent-id", prisma);
-    expect(result).toEqual([]);
+    expect(result.originBairro).toBeNull();
+    expect(result.results).toEqual([]);
   });
 
   it("returns shelters for a quarteirao in Khongolote ordered by tier, capacity, name", async () => {
@@ -68,8 +69,10 @@ describe("getSheltersForQuarteirao", () => {
 
     const quarteiraoId = khongolote!.quarteiroes[0].id;
 
-    const results = await getSheltersForQuarteirao(quarteiraoId, prisma);
+    const response = await getSheltersForQuarteirao(quarteiraoId, prisma);
+    const results = response.results;
 
+    expect(response.originBairro?.name).toBe("Khongolote");
     expect(results).toHaveLength(3);
     expect(results[0].name).toBe("EPC Khongolote");
     expect(results[0].tier).toBe("OFFICIAL");
@@ -94,7 +97,8 @@ describe("getSheltersForQuarteirao", () => {
     });
     const quarteiraoId = khongolote!.quarteiroes[0].id;
 
-    const results = await getSheltersForQuarteirao(quarteiraoId, prisma);
+    const results = (await getSheltersForQuarteirao(quarteiraoId, prisma))
+      .results;
 
     expect(results.length).toBeGreaterThan(0);
     for (const r of results) {
@@ -139,8 +143,13 @@ describe("getSheltersForQuarteirao", () => {
       },
     });
 
-    const results = await getSheltersForQuarteirao(zeroShelterQuarteirao.id, prisma);
+    const response = await getSheltersForQuarteirao(
+      zeroShelterQuarteirao.id,
+      prisma,
+    );
+    const results = response.results;
 
+    expect(response.originBairro?.name).toBe("Bairro Teste Zero Abrigos");
     expect(results.length).toBeGreaterThan(0);
     for (const r of results) {
       expect(r.fromNeighboringBairro).toBe(true);
@@ -175,8 +184,12 @@ describe("getSheltersForQuarteirao", () => {
       data: { bairroAId: emptyBairro1.id, bairroBId: emptyBairro2.id },
     });
 
-    const results = await getSheltersForQuarteirao(emptyQuarteirao.id, prisma);
-    expect(results).toEqual([]);
+    const response = await getSheltersForQuarteirao(
+      emptyQuarteirao.id,
+      prisma,
+    );
+    expect(response.originBairro?.name).toBe("Bairro Vazio 1");
+    expect(response.results).toEqual([]);
   });
 
   it("correctly sorts OFFICIAL before COMMUNITY across different bairros during overflow", async () => {
@@ -222,7 +235,10 @@ describe("getSheltersForQuarteirao", () => {
       data: { bairroAId: overflowBairro.id, bairroBId: t3!.id },
     });
 
-    const results = await getSheltersForQuarteirao(overflowQuarteirao.id, prisma);
+    const results = (await getSheltersForQuarteirao(
+      overflowQuarteirao.id,
+      prisma,
+    )).results;
 
     let foundCommunity = false;
     for (const r of results) {
@@ -245,7 +261,8 @@ describe("getSheltersForQuarteirao", () => {
     });
     const quarteiraoId = khongolote!.quarteiroes[0].id;
 
-    const results = await getSheltersForQuarteirao(quarteiraoId, prisma);
+    const results = (await getSheltersForQuarteirao(quarteiraoId, prisma))
+      .results;
 
     expect(results.length).toBeGreaterThan(0);
     for (const r of results) {

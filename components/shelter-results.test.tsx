@@ -36,7 +36,13 @@ const mockLiveShelters = [
   },
 ];
 
+const mockLiveResponse = {
+  originBairro: { id: "bairro-khongolote", name: "Khongolote" },
+  results: mockLiveShelters,
+};
+
 const mockCachedShelters = {
+  originBairro: { id: "bairro-khongolote", name: "Khongolote" },
   results: [
     {
       id: "s3",
@@ -79,7 +85,7 @@ describe("ShelterResults", () => {
   it("renders shelters from live fetch when successful", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockLiveShelters),
+      json: () => Promise.resolve(mockLiveResponse),
     });
 
     render(<ShelterResults quarteiraoId="q1" />);
@@ -122,6 +128,7 @@ describe("ShelterResults", () => {
   it("shows error message and retry button when live fetch fails and no cache exists", async () => {
     global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
     mockGetCachedShelters.mockResolvedValue({
+      originBairro: null,
       results: [],
       lastSyncedAt: null,
     });
@@ -141,7 +148,7 @@ describe("ShelterResults", () => {
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockLiveShelters),
+      json: () => Promise.resolve(mockLiveResponse),
     });
 
     const user = userEvent.setup();
@@ -183,7 +190,11 @@ describe("ShelterResults", () => {
   it("shows empty state when live fetch returns empty array", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve([]),
+      json: () =>
+        Promise.resolve({
+          originBairro: { id: "bairro-khongolote", name: "Khongolote" },
+          results: [],
+        }),
     });
 
     render(<ShelterResults quarteiraoId="q1" />);
@@ -205,7 +216,11 @@ describe("ShelterResults", () => {
 
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(withOverflow),
+      json: () =>
+        Promise.resolve({
+          originBairro: { id: "bairro-khongolote", name: "Khongolote" },
+          results: withOverflow,
+        }),
     });
 
     render(<ShelterResults quarteiraoId="q1" />);
@@ -221,10 +236,49 @@ describe("ShelterResults", () => {
     ).toBeInTheDocument();
   });
 
+  it("uses the selected bairro for heading and context label when results come from a neighboring bairro", async () => {
+    const overflowFromNeighbor = [
+      {
+        ...mockLiveShelters[0],
+        fromNeighboringBairro: true,
+      },
+    ];
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          originBairro: { id: "bairro-a", name: "Bairro A" },
+          results: overflowFromNeighbor,
+        }),
+    });
+
+    render(<ShelterResults quarteiraoId="q1" />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Abrigos próximos a Bairro A"),
+      ).toBeInTheDocument();
+    });
+
+    expect(
+      screen.queryByText("Abrigos próximos a Khongolote"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Abrigos próximos a Bairro A/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Khongolote/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/abrigos de bairros vizinhos/),
+    ).toBeInTheDocument();
+  });
+
   it("does not show staleness banner when serving live data", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(mockLiveShelters),
+      json: () => Promise.resolve(mockLiveResponse),
     });
 
     render(<ShelterResults quarteiraoId="q1" />);

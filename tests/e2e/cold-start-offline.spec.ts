@@ -148,7 +148,13 @@ test.describe("Cold start offline (service worker precaching)", () => {
       await onlinePage.route(/\/api\/shelters\?quarteiraoId=/, async (route) => {
         await route.fulfill({
           contentType: "application/json",
-          body: JSON.stringify(khongoloteShelters),
+          body: JSON.stringify({
+            originBairro: {
+              id: "67dbc54f-775e-55ee-a0f4-39c2253bf973",
+              name: "Khongolote",
+            },
+            results: khongoloteShelters,
+          }),
         });
       });
 

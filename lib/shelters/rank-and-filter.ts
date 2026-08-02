@@ -27,6 +27,16 @@ export type ShelterSearchResult = {
   fromNeighboringBairro: boolean;
 };
 
+export type OriginBairro = {
+  id: string;
+  name: string;
+};
+
+export type ShelterSearchResponse = {
+  originBairro: OriginBairro | null;
+  results: ShelterSearchResult[];
+};
+
 const CAPACITY_ORDER: Record<string, number> = {
   AVAILABLE: 0,
   NEARLY_FULL: 1,

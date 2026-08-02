@@ -6,7 +6,10 @@ import { ShelterCard } from "./shelter-card";
 import { Button } from "@/components/ui/button";
 import { getCachedShelters } from "@/lib/offline/query";
 import { fetchWithTimeout } from "@/lib/offline/fetch-with-timeout";
-import type { ShelterSearchResult } from "@/lib/shelters/search";
+import type {
+  ShelterSearchResponse,
+  ShelterSearchResult,
+} from "@/lib/shelters/search";
 
 function EmptyState() {
   return (
@@ -55,8 +58,13 @@ function StalenessBanner({ lastSyncedAt }: { lastSyncedAt: string }) {
 type State =
   | { status: "loading" }
   | { status: "error" }
-  | { status: "cached"; shelters: ShelterSearchResult[]; lastSyncedAt: string }
-  | { status: "live"; shelters: ShelterSearchResult[] };
+  | {
+      status: "cached";
+      shelters: ShelterSearchResult[];
+      originBairroName: string;
+      lastSyncedAt: string;
+    }
+  | { status: "live"; shelters: ShelterSearchResult[]; originBairroName: string };
 
 export function ShelterResults({
   quarteiraoId,
@@ -76,8 +84,14 @@ export function ShelterResults({
           `/api/shelters?quarteiraoId=${encodeURIComponent(quarteiraoId)}`,
         );
         if (!res.ok) throw new Error("Fetch failed");
-        const data: ShelterSearchResult[] = await res.json();
-        if (!cancelled) setState({ status: "live", shelters: data });
+        const data: ShelterSearchResponse = await res.json();
+        if (!cancelled) {
+          setState({
+            status: "live",
+            shelters: data.results,
+            originBairroName: data.originBairro?.name ?? "",
+          });
+        }
       } catch {
         try {
           const cached = await getCachedShelters(quarteiraoId);
@@ -86,6 +100,7 @@ export function ShelterResults({
               setState({
                 status: "cached",
                 shelters: cached.results,
+                originBairroName: cached.originBairro?.name ?? "",
                 lastSyncedAt: cached.lastSyncedAt,
               });
             } else {
@@ -131,6 +146,7 @@ export function ShelterResults({
   }
 
   const shelters = state.shelters;
+  const originBairroName = state.originBairroName;
 
   if (shelters.length === 0) {
     return (
@@ -145,11 +161,11 @@ export function ShelterResults({
     <main className="mx-auto flex min-h-screen flex-col px-4 py-6">
       <BackNav
         href="/explorar"
-        contextLabel={shelters[0].bairroName}
+        contextLabel={originBairroName}
         title={
           shelters.some((s) => s.fromNeighboringBairro)
-            ? `Abrigos próximos a ${shelters[0].bairroName}`
-            : `Abrigos disponíveis em ${shelters[0].bairroName}`
+            ? `Abrigos próximos a ${originBairroName}`
+            : `Abrigos disponíveis em ${originBairroName}`
         }
       />
 

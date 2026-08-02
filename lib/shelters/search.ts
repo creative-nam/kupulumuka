@@ -3,22 +3,34 @@ import { prisma } from "@/lib/db/prisma-client";
 import {
   rankAndFilterShelters,
 } from "./rank-and-filter";
-import type { ShelterSearchResult } from "./rank-and-filter";
+import type {
+  ShelterSearchResponse,
+  ShelterSearchResult,
+} from "./rank-and-filter";
 
-export type { ShelterSearchResult };
+export type { ShelterSearchResponse, ShelterSearchResult };
 
 export async function getSheltersForQuarteirao(
   quarteiraoId: string,
   client?: PrismaClient,
-): Promise<ShelterSearchResult[]> {
+): Promise<ShelterSearchResponse> {
   const db = client ?? prisma;
 
   const quarteirao = await db.quarteirao.findUnique({
     where: { id: quarteiraoId },
-    select: { bairroId: true },
+    select: {
+      bairro: { select: { id: true, name: true } },
+    },
   });
 
-  if (!quarteirao) return [];
+  if (!quarteirao) {
+    return { originBairro: null, results: [] };
+  }
+
+  const originBairro = {
+    id: quarteirao.bairro.id,
+    name: quarteirao.bairro.name,
+  };
 
   const [dbShelters, dbAdjacency] = await Promise.all([
     db.shelter.findMany({
@@ -52,5 +64,12 @@ export async function getSheltersForQuarteirao(
     bairroBId: v.bairroBId,
   }));
 
-  return rankAndFilterShelters(shelterInputs, quarteirao.bairroId, adjacencyPairs);
+  return {
+    originBairro,
+    results: rankAndFilterShelters(
+      shelterInputs,
+      quarteirao.bairro.id,
+      adjacencyPairs,
+    ),
+  };
 }

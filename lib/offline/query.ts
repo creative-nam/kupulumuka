@@ -2,7 +2,10 @@ import { getDb } from "./db";
 import {
   rankAndFilterShelters,
 } from "@/lib/shelters/rank-and-filter";
-import type { ShelterSearchResult } from "@/lib/shelters/rank-and-filter";
+import type {
+  OriginBairro,
+  ShelterSearchResult,
+} from "@/lib/shelters/rank-and-filter";
 import type { SheltersSnapshotItem } from "@/scripts/generate-shelters-snapshot";
 import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
 
@@ -51,7 +54,11 @@ function shelteInputsWithNames(
 
 export async function getCachedShelters(
   quarteiraoId: string,
-): Promise<{ results: ShelterSearchResult[]; lastSyncedAt: string | null }> {
+): Promise<{
+  originBairro: OriginBairro | null;
+  results: ShelterSearchResult[];
+  lastSyncedAt: string | null;
+}> {
   const db = getDb();
 
   const [geoEntry, allShelters, adjacencyPairs, meta] = await Promise.all([
@@ -61,16 +68,24 @@ export async function getCachedShelters(
     db.syncMeta.get("lastSyncedAt"),
   ]);
 
+  const lastSyncedAt = meta?.value ?? null;
+
   if (!geoEntry) {
-    return { results: [], lastSyncedAt: meta?.value ?? null };
+    return { originBairro: null, results: [], lastSyncedAt };
   }
 
   const lookups = buildLookups(geoEntry.data);
   const targetBairroId = lookups.quarteiraoToBairro.get(quarteiraoId);
 
   if (!targetBairroId) {
-    return { results: [], lastSyncedAt: meta?.value ?? null };
+    return { originBairro: null, results: [], lastSyncedAt };
   }
+
+  const targetBairroName = lookups.bairroName.get(targetBairroId) ?? null;
+  const originBairro: OriginBairro | null =
+    targetBairroId && targetBairroName
+      ? { id: targetBairroId, name: targetBairroName }
+      : null;
 
   const shelterInputs = shelteInputsWithNames(allShelters, lookups);
 
@@ -85,7 +100,7 @@ export async function getCachedShelters(
     adjacencyPairsMapped,
   );
 
-  return { results, lastSyncedAt: meta?.value ?? null };
+  return { originBairro, results, lastSyncedAt };
 }
 
 export async function getCachedGeoSnapshot(): Promise<GeoSnapshot | null> {
