@@ -77,12 +77,18 @@ function SelectField({
   );
 }
 
-function StalenessBanner({ lastSyncedAt }: { lastSyncedAt: string }) {
+function StalenessBanner({
+  lastSyncedAt,
+}: {
+  lastSyncedAt?: string | null;
+}) {
   const formatted = React.useMemo(() => {
+    if (!lastSyncedAt) return null;
     const d = new Date(lastSyncedAt);
+    if (Number.isNaN(d.getTime())) return null;
     return d.toLocaleString("pt-PT", {
-      day: "numeric",
-      month: "numeric",
+      day: "2-digit",
+      month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -91,8 +97,8 @@ function StalenessBanner({ lastSyncedAt }: { lastSyncedAt: string }) {
 
   return (
     <p className="mb-3 rounded-[10px] border border-border-default bg-surface px-3 py-2 text-[12px] text-secondary-text">
-      Sem ligação — a mostrar dados guardados (última atualização:{" "}
-      {formatted})
+      Sem ligação — a mostrar dados guardados
+      {formatted ? ` (última atualização: ${formatted})` : ""}
     </p>
   );
 }
@@ -200,7 +206,7 @@ export function GeographicPicker() {
 
   return (
     <div className="flex flex-col gap-6">
-      {isCached && cachedAt && <StalenessBanner lastSyncedAt={cachedAt} />}
+      {isCached && <StalenessBanner lastSyncedAt={cachedAt} />}
 
       <h1 className="font-fraunces text-[15px] font-medium text-primary-text">
         Explorar abrigos

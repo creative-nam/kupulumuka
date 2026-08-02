@@ -3,6 +3,6 @@ reviews:
     - "!**/*.lock"
     - "!dist/**/*"
     - "!node_modules/**/*"
-    - "!.claude/**"
-    - "!.agents/**"
+    - "!**.claude/**"
+    - "!**/.agents/**"
       

@@ -397,6 +397,22 @@ describe("GeographicPicker", () => {
     expect(screen.getByLabelText("Distrito")).not.toBeDisabled();
   });
 
+  it("shows the staleness banner without a timestamp when getLastSyncedAt fails", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new Error("Network error"));
+    mockGetCachedGeoSnapshot.mockResolvedValue(mockSnapshot);
+    mockGetLastSyncedAt.mockRejectedValue(new Error("metadata unavailable"));
+
+    render(<GeographicPicker />);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Província")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText(/Sem ligação/)).toBeInTheDocument();
+    expect(screen.queryByText(/última atualização/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Invalid Date/)).not.toBeInTheDocument();
+  });
+
   it("falls back to cached snapshot when the snapshot fetch hangs instead of settling", async () => {
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     try {
