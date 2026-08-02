@@ -6,7 +6,21 @@ import type { AdjacencyPairRecord } from "./db";
 
 type AdjacencyResponse = { bairroAId: string; bairroBId: string }[];
 
-export async function syncData(): Promise<{ lastSyncedAt: string }> {
+let inFlightSync: Promise<{ lastSyncedAt: string }> | null = null;
+
+export function syncData(): Promise<{ lastSyncedAt: string }> {
+  if (inFlightSync) {
+    return inFlightSync;
+  }
+
+  inFlightSync = performSync().finally(() => {
+    inFlightSync = null;
+  });
+
+  return inFlightSync;
+}
+
+async function performSync(): Promise<{ lastSyncedAt: string }> {
   const [geoRes, sheltersRes, adjacencyRes] = await Promise.all([
     fetchWithTimeout("/geo-snapshot.json"),
     fetchWithTimeout("/shelters-snapshot.json"),

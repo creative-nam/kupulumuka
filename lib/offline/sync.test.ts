@@ -212,4 +212,48 @@ describe("syncData", () => {
     const ts2Time = new Date(ts2).getTime();
     expect(ts2Time).toBeGreaterThan(ts1Time);
   });
+
+  it("dedupes overlapping syncData calls: one fetch sequence, same result for both callers", async () => {
+    let releaseGeo!: () => void;
+    const geoGate = new Promise<void>((resolve) => {
+      releaseGeo = resolve;
+    });
+
+    const fetchCounts = new Map<string, number>();
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      fetchCounts.set(url, (fetchCounts.get(url) ?? 0) + 1);
+      if (url === "/geo-snapshot.json") {
+        return geoGate.then(() => ({
+          ok: true,
+          json: () => Promise.resolve(mockGeoSnapshot),
+        }));
+      }
+      if (url === "/shelters-snapshot.json") return mockFetchShelters();
+      if (url === "/api/adjacency") return mockFetchAdjacency();
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
+
+    const first = syncData();
+    const second = syncData();
+
+    expect(fetchCounts.get("/geo-snapshot.json")).toBe(1);
+    expect(fetchCounts.get("/shelters-snapshot.json")).toBe(1);
+    expect(fetchCounts.get("/api/adjacency")).toBe(1);
+    expect(global.fetch).toHaveBeenCalledTimes(3);
+
+    releaseGeo();
+
+    const [resultA, resultB] = await Promise.all([first, second]);
+
+    expect(resultA).toBe(resultB);
+    expect(resultA.lastSyncedAt).toBe(resultB.lastSyncedAt);
+
+    const db = getDb();
+    const shelters = await db.shelters.toArray();
+    expect(shelters).toHaveLength(2);
+    expect(await db.syncMeta.get("lastSyncedAt")).toHaveProperty(
+      "value",
+      resultA.lastSyncedAt,
+    );
+  });
 });
