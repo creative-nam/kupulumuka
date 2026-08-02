@@ -5,22 +5,44 @@ import { join, relative, sep } from "node:path";
 import { walkDir } from "./lib/walk-dir";
 
 const STATIC_DIR = join(".next", "static");
+const BUILD_ID_PATH = join(".next", "BUILD_ID");
 
 function hashFile(filePath: string): string {
   const content = readFileSync(filePath);
   return createHash("md5").update(content).digest("hex").slice(0, 8);
 }
 
-function findBuildIdDir(): string | null {
-  if (!existsSync(STATIC_DIR)) return null;
-  const entries = readdirSync(STATIC_DIR);
+export function findBuildIdDir(
+  staticDir: string = STATIC_DIR,
+  buildIdPath: string = BUILD_ID_PATH,
+): string | null {
+  const buildId = readBuildId(buildIdPath);
+  if (buildId) {
+    const buildIdDir = join(staticDir, buildId);
+    if (existsSync(buildIdDir) && statSync(buildIdDir).isDirectory()) {
+      return buildId;
+    }
+  }
+  if (!existsSync(staticDir)) return null;
+  const entries = readdirSync(staticDir);
   for (const entry of entries) {
-    const fullPath = join(STATIC_DIR, entry);
-    if (statSync(fullPath).isDirectory() && entry !== "chunks" && entry !== "media") {
+    const fullPath = join(staticDir, entry);
+    if (
+      statSync(fullPath).isDirectory() &&
+      entry !== "chunks" &&
+      entry !== "media" &&
+      entry !== "css"
+    ) {
       return entry;
     }
   }
   return null;
+}
+
+function readBuildId(buildIdPath: string): string | null {
+  if (!existsSync(buildIdPath)) return null;
+  const buildId = readFileSync(buildIdPath, "utf-8").trim();
+  return buildId || null;
 }
 
 function urlFromStaticPath(absolutePath: string): string {

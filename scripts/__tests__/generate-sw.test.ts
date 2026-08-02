@@ -3,7 +3,7 @@ import { existsSync, readFileSync, mkdtempSync, writeFileSync, mkdirSync, rmSync
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { walkDir } from "../lib/walk-dir";
-import { htmlFilePathToUrl } from "../generate-sw";
+import { htmlFilePathToUrl, findBuildIdDir } from "../generate-sw";
 
 const SW_PATH = join(process.cwd(), "public", "sw.js");
 
@@ -154,6 +154,94 @@ describe("walkDir recursive directory scanner", () => {
     writeFileSync(join(tmpDir, "sub", "b.txt"), "");
     const results = walkDir(tmpDir, (n) => n.endsWith(".js"));
     expect(results).toEqual([]);
+  });
+});
+
+describe("findBuildIdDir build-ID directory resolution", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), "sw-buildid-"));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  function writeBuildTree(entries: Record<string, boolean | string>): {
+    staticDir: string;
+    buildIdPath: string;
+  } {
+    const staticDir = join(tmpDir, "static");
+    mkdirSync(staticDir, { recursive: true });
+    for (const [name, value] of Object.entries(entries)) {
+      if (typeof value === "string") {
+        const buildIdPath = join(tmpDir, "BUILD_ID");
+        writeFileSync(buildIdPath, value);
+      } else {
+        mkdirSync(join(staticDir, name), { recursive: true });
+      }
+    }
+    return { staticDir, buildIdPath: join(tmpDir, "BUILD_ID") };
+  }
+
+  it("reads the build ID from BUILD_ID instead of guessing (css present, the bug case)", () => {
+    const { staticDir, buildIdPath } = writeBuildTree({
+      chunks: true,
+      css: true,
+      media: true,
+      "d4e5f6g7h8i9j0k1l2m3n4o5-p6q7": true,
+      BUILD_ID: "d4e5f6g7h8i9j0k1l2m3n4o5-p6q7",
+    });
+    expect(findBuildIdDir(staticDir, buildIdPath)).toBe("d4e5f6g7h8i9j0k1l2m3n4o5-p6q7");
+  });
+
+  it("returns null when the BUILD_ID file is empty", () => {
+    const { staticDir, buildIdPath } = writeBuildTree({
+      chunks: true,
+      css: true,
+      media: true,
+      abc: true,
+      BUILD_ID: "   \n",
+    });
+    expect(findBuildIdDir(staticDir, buildIdPath)).toBe("abc");
+  });
+
+  it("falls back to a directory scan when BUILD_ID is missing, excluding css", () => {
+    const { staticDir, buildIdPath } = writeBuildTree({
+      chunks: true,
+      css: true,
+      media: true,
+      abc: true,
+    });
+    expect(findBuildIdDir(staticDir, buildIdPath)).toBe("abc");
+  });
+
+  it("falls back to a directory scan when BUILD_ID names a directory that does not exist", () => {
+    const { staticDir, buildIdPath } = writeBuildTree({
+      chunks: true,
+      css: true,
+      media: true,
+      abc: true,
+      BUILD_ID: "missing-build-id",
+    });
+    expect(findBuildIdDir(staticDir, buildIdPath)).toBe("abc");
+  });
+
+  it("returns null when the static directory does not exist", () => {
+    const { buildIdPath } = writeBuildTree({
+      BUILD_ID: "abc",
+    });
+    expect(findBuildIdDir(join(tmpDir, "nonexistent"), buildIdPath)).toBeNull();
+  });
+
+  it("returns null when only chunks, media, and css exist (no build-ID directory)", () => {
+    const { staticDir, buildIdPath } = writeBuildTree({
+      chunks: true,
+      css: true,
+      media: true,
+    });
+    expect(findBuildIdDir(staticDir, buildIdPath)).toBeNull();
   });
 });
 
