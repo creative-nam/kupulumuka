@@ -616,11 +616,22 @@ async function createUsers(tx: Prisma.TransactionClient) {
   }
 }
 
-async function main() {
-  const adapter = new PrismaPg({ connectionString: process.env["DIRECT_URL"] });
+export async function main() {
+  const directUrl = process.env["DIRECT_URL"];
+  if (!directUrl) {
+    throw new Error(
+      "DIRECT_URL is not set. The seed script requires the direct (non-pooled) connection string; without it, the pg driver silently falls back to ambient connection defaults (PGHOST/PGUSER/PGDATABASE or a local socket) and could run destructive deleteMany calls against an unintended database.",
+    );
+  }
+
+  const adapter = new PrismaPg({ connectionString: directUrl });
   const prisma = new PrismaClient({ adapter });
-  await runSeed(prisma);
-  await prisma.$disconnect();
+
+  try {
+    await runSeed(prisma);
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 if (process.argv[1]?.replace(/\\/g, "/").endsWith("prisma/seed.ts")) {
