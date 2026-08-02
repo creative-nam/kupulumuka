@@ -1,4 +1,5 @@
 import { PrismaClient } from "../lib/generated/prisma/client";
+import type { Prisma } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { stableId } from "../scripts/lib/deterministic-id";
 import { validateUserContact } from "../lib/db/user-validation";
@@ -378,133 +379,138 @@ const data: ProvinciaSeed[] = [
 export async function runSeed(prisma: PrismaClient) {
   console.log("Starting seed...");
 
-  // Wipe geographic data in dependency order so the seed is idempotent.
-  // Users are upserted and preserved across runs.
-  await prisma.shelter.deleteMany();
-  await prisma.user.updateMany({ data: { homeQuarteiraoId: null } });
-  await prisma.bairroVizinho.deleteMany();
-  await prisma.quarteirao.deleteMany();
-  await prisma.bairro.deleteMany();
-  await prisma.distrito.deleteMany();
-  await prisma.provincia.deleteMany();
+  await prisma.$transaction(
+    async (tx) => {
+      // Wipe geographic data in dependency order so the seed is idempotent.
+      // Users are upserted and preserved across runs.
+      await tx.shelter.deleteMany();
+      await tx.user.updateMany({ data: { homeQuarteiraoId: null } });
+      await tx.bairroVizinho.deleteMany();
+      await tx.quarteirao.deleteMany();
+      await tx.bairro.deleteMany();
+      await tx.distrito.deleteMany();
+      await tx.provincia.deleteMany();
 
-  await createUsers(prisma);
+      await createUsers(tx);
 
-  for (const provincia of data) {
-    const createdProvincia = await prisma.provincia.create({
-      data: {
-        id: stableId("provincia", provincia.name),
-        name: provincia.name,
-      },
-    });
-    console.log(`Provincia: ${createdProvincia.name}`);
-
-    for (const distrito of provincia.distritos) {
-      const createdDistrito = await prisma.distrito.create({
-        data: {
-          id: stableId("distrito", provincia.name, distrito.name),
-          name: distrito.name,
-          provinciaId: createdProvincia.id,
-        },
-      });
-      console.log(`  Distrito: ${createdDistrito.name}`);
-
-      // Phase 1: Create all bairros (and their quarteiroes/shelters), collect IDs
-      const bairroInfos: {
-        id: string;
-        name: string;
-        vizinhos: string[];
-      }[] = [];
-
-      for (const bairro of distrito.bairros) {
-        const createdBairro = await prisma.bairro.create({
+      for (const provincia of data) {
+        const createdProvincia = await tx.provincia.create({
           data: {
-            id: stableId("bairro", provincia.name, distrito.name, bairro.name),
-            name: bairro.name,
-            distritoId: createdDistrito.id,
+            id: stableId("provincia", provincia.name),
+            name: provincia.name,
           },
         });
-        console.log(`    Bairro: ${createdBairro.name}`);
+        console.log(`Provincia: ${createdProvincia.name}`);
 
-        const quarteiraoMap = new Map<string, string>();
-
-        for (const qName of bairro.quarteiroes) {
-          const createdQ = await prisma.quarteirao.create({
+        for (const distrito of provincia.distritos) {
+          const createdDistrito = await tx.distrito.create({
             data: {
-              id: stableId(
-                "quarteirao",
-                provincia.name,
-                distrito.name,
-                bairro.name,
-                qName,
-              ),
-              name: qName,
-              bairroId: createdBairro.id,
+              id: stableId("distrito", provincia.name, distrito.name),
+              name: distrito.name,
+              provinciaId: createdProvincia.id,
             },
           });
-          quarteiraoMap.set(qName, createdQ.id);
-        }
+          console.log(`  Distrito: ${createdDistrito.name}`);
 
-        const defaultQuarteiraoId = quarteiraoMap.values().next().value!;
+          // Phase 1: Create all bairros (and their quarteiroes/shelters), collect IDs
+          const bairroInfos: {
+            id: string;
+            name: string;
+            vizinhos: string[];
+          }[] = [];
 
-        for (const shelterData of bairro.shelters) {
-          let uploadedById: string | undefined;
-
-          if (shelterData.uploadedByEmail) {
-            const user = await prisma.user.findUnique({
-              where: { email: shelterData.uploadedByEmail },
+          for (const bairro of distrito.bairros) {
+            const createdBairro = await tx.bairro.create({
+              data: {
+                id: stableId("bairro", provincia.name, distrito.name, bairro.name),
+                name: bairro.name,
+                distritoId: createdDistrito.id,
+              },
             });
-            if (user) uploadedById = user.id;
+            console.log(`    Bairro: ${createdBairro.name}`);
+
+            const quarteiraoMap = new Map<string, string>();
+
+            for (const qName of bairro.quarteiroes) {
+              const createdQ = await tx.quarteirao.create({
+                data: {
+                  id: stableId(
+                    "quarteirao",
+                    provincia.name,
+                    distrito.name,
+                    bairro.name,
+                    qName,
+                  ),
+                  name: qName,
+                  bairroId: createdBairro.id,
+                },
+              });
+              quarteiraoMap.set(qName, createdQ.id);
+            }
+
+            const defaultQuarteiraoId = quarteiraoMap.values().next().value!;
+
+            for (const shelterData of bairro.shelters) {
+              let uploadedById: string | undefined;
+
+              if (shelterData.uploadedByEmail) {
+                const user = await tx.user.findUnique({
+                  where: { email: shelterData.uploadedByEmail },
+                });
+                if (user) uploadedById = user.id;
+              }
+
+              await tx.shelter.create({
+                data: {
+                  id: stableId(
+                    "shelter",
+                    provincia.name,
+                    distrito.name,
+                    bairro.name,
+                    shelterData.name,
+                  ),
+                  name: shelterData.name,
+                  tier: shelterData.tier,
+                  capacityStatus: shelterData.capacityStatus,
+                  routeDescription: shelterData.routeDescription,
+                  quarteiraoId: defaultQuarteiraoId,
+                  uploadedById: uploadedById ?? null,
+                },
+              });
+            }
+
+            bairroInfos.push({
+              id: createdBairro.id,
+              name: bairro.name,
+              vizinhos: bairro.vizinhos,
+            });
           }
 
-          await prisma.shelter.create({
-            data: {
-              id: stableId(
-                "shelter",
-                provincia.name,
-                distrito.name,
-                bairro.name,
-                shelterData.name,
-              ),
-              name: shelterData.name,
-              tier: shelterData.tier,
-              capacityStatus: shelterData.capacityStatus,
-              routeDescription: shelterData.routeDescription,
-              quarteiraoId: defaultQuarteiraoId,
-              uploadedById: uploadedById ?? null,
-            },
-          });
-        }
+          // Phase 2: Create all BairroVizinho pairs (all bairros now exist)
+          const bairroIdByName = new Map(bairroInfos.map((b) => [b.name, b.id]));
 
-        bairroInfos.push({
-          id: createdBairro.id,
-          name: bairro.name,
-          vizinhos: bairro.vizinhos,
-        });
-      }
+          const pairs: { bairroAId: string; bairroBId: string }[] = [];
 
-      // Phase 2: Create all BairroVizinho pairs (all bairros now exist)
-      const bairroIdByName = new Map(bairroInfos.map((b) => [b.name, b.id]));
-
-      const pairs: { bairroAId: string; bairroBId: string }[] = [];
-
-      for (const bairroInfo of bairroInfos) {
-        for (const vizinhoName of bairroInfo.vizinhos) {
-          const vizinhoId = bairroIdByName.get(vizinhoName);
-          if (!vizinhoId) {
-            throw new Error(
-              `Vizinho "${vizinhoName}" (referenced by "${bairroInfo.name}" in distrito "${distrito.name}") not found — cross-distrito neighbours are not supported because bairroIdByName is scoped to the current distrito`,
-            );
+          for (const bairroInfo of bairroInfos) {
+            for (const vizinhoName of bairroInfo.vizinhos) {
+              const vizinhoId = bairroIdByName.get(vizinhoName);
+              if (!vizinhoId) {
+                throw new Error(
+                  `Vizinho "${vizinhoName}" (referenced by "${bairroInfo.name}" in distrito "${distrito.name}") not found — cross-distrito neighbours are not supported because bairroIdByName is scoped to the current distrito`,
+                );
+              }
+              pairs.push({ bairroAId: bairroInfo.id, bairroBId: vizinhoId });
+            }
           }
-          pairs.push({ bairroAId: bairroInfo.id, bairroBId: vizinhoId });
+
+          if (pairs.length > 0) {
+            await tx.bairroVizinho.createMany({ data: pairs, skipDuplicates: true });
+          }
         }
       }
-
-      if (pairs.length > 0) {
-        await prisma.bairroVizinho.createMany({ data: pairs, skipDuplicates: true });
-      }
-    }
-  }
+    },
+    { timeout: 60_000 },
+  );
 
   console.log("\nSeed completed successfully!");
   console.log(`Provincias: ${await prisma.provincia.count()}`);
@@ -516,7 +522,7 @@ export async function runSeed(prisma: PrismaClient) {
   console.log(`Users: ${await prisma.user.count()}`);
 }
 
-async function createUsers(prisma: PrismaClient) {
+async function createUsers(tx: Prisma.TransactionClient) {
   const institutionalUsers = [
     {
       name: "Maria João",
@@ -550,7 +556,7 @@ async function createUsers(prisma: PrismaClient) {
 
   for (const user of institutionalUsers) {
     validateUserContact(user);
-    await prisma.user.upsert({
+    await tx.user.upsert({
       where: { email: user.email! },
       update: {},
       create: {
@@ -596,7 +602,7 @@ async function createUsers(prisma: PrismaClient) {
 
   for (const user of communityUsers) {
     validateUserContact(user);
-    await prisma.user.upsert({
+    await tx.user.upsert({
       where: { phone: user.phone! },
       update: {},
       create: {
