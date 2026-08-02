@@ -178,7 +178,15 @@ test.describe("Cold start offline (service worker precaching)", () => {
       ).toBeVisible({ timeout: 15000 });
       await expect(onlinePage.getByText("EPC Khongolote")).toBeVisible();
 
-      await onlinePage.waitForFunction(() => {
+      await onlinePage.waitForFunction(async () => {
+        // Never call open() before the database exists: indexedDB.open with no
+        // version number would create an empty version-1 database as a side
+        // effect, which then persists in the profile and makes Dexie upgrade a
+        // database this probe created instead of cleanly opening its own.
+        const databases = await indexedDB.databases();
+        if (!databases.some((db) => db.name === "kupulumuka")) {
+          return false;
+        }
         return new Promise<boolean>((resolve) => {
           const openRequest = indexedDB.open("kupulumuka");
           openRequest.onerror = () => resolve(false);
