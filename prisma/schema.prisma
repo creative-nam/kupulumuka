@@ -45,6 +45,8 @@ model Distrito {
   bairros    Bairro[]
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  @@index([provinciaId])
 }
 
 model Bairro {
@@ -57,6 +59,8 @@ model Bairro {
   vizinhoB       BairroVizinho[]  @relation("bairroB")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+
+  @@index([distritoId])
 }
 
 model Quarteirao {
@@ -68,6 +72,8 @@ model Quarteirao {
   users      User[]
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+
+  @@index([bairroId])
 }
 
 model BairroVizinho {
@@ -77,6 +83,7 @@ model BairroVizinho {
   bairroB   Bairro @relation("bairroB", fields: [bairroBId], references: [id])
 
   @@id([bairroAId, bairroBId])
+  @@index([bairroBId])
 }
 
 model Shelter {
@@ -94,6 +101,9 @@ model Shelter {
   quarteiraoId    String
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+
+  @@index([quarteiraoId])
+  @@index([uploadedById])
 }
 
 model User {
