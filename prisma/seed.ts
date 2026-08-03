@@ -448,7 +448,12 @@ export async function runSeed(prisma: PrismaClient) {
               quarteiraoMap.set(qName, createdQ.id);
             }
 
-            const defaultQuarteiraoId = quarteiraoMap.values().next().value!;
+            const defaultQuarteiraoId = quarteiraoMap.values().next().value;
+            if (!defaultQuarteiraoId) {
+              throw new Error(
+                `Bairro "${bairro.name}" (distrito "${distrito.name}") declares no quarteiroes — cannot assign shelters a default quarteirao; add at least one quarteirao to the seed data`,
+              );
+            }
 
             for (const shelterData of bairro.shelters) {
               let uploadedById: string | undefined;
@@ -457,7 +462,12 @@ export async function runSeed(prisma: PrismaClient) {
                 const user = await tx.user.findUnique({
                   where: { email: shelterData.uploadedByEmail },
                 });
-                if (user) uploadedById = user.id;
+                if (!user) {
+                  throw new Error(
+                    `Shelter "${shelterData.name}" (bairro "${bairro.name}", distrito "${distrito.name}") references uploadedByEmail "${shelterData.uploadedByEmail}" which does not match any seeded user`,
+                  );
+                }
+                uploadedById = user.id;
               }
 
               await tx.shelter.create({
