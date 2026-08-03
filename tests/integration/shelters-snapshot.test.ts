@@ -110,6 +110,11 @@ describe("Shelters snapshot generation", () => {
       provinciaShelterIds.set(p.name, ids);
     }
 
+    const provincesWithShelters = [...provinciaShelterIds.values()].filter(
+      (ids) => ids.size > 0,
+    );
+    expect(provincesWithShelters.length).toBe(4);
+
     for (const [, ids] of provinciaShelterIds) {
       if (ids.size === 0) continue;
       const found = snapshot.filter((s) => ids.has(s.id));
