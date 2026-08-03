@@ -48,6 +48,10 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
       - run: npm run test
 
   integration:
