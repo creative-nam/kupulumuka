@@ -52,6 +52,7 @@ server.on("exit", (code, signal) => {
     return;
   }
   if (signal) {
+    process.removeAllListeners(signal);
     process.kill(process.pid, signal);
     setTimeout(() => process.exit(1), 1000).unref();
     return;
