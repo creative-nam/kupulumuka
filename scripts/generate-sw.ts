@@ -46,7 +46,7 @@ function readBuildId(buildIdPath: string): string | null {
 }
 
 function urlFromStaticPath(absolutePath: string): string {
-  const rel = relative(STATIC_DIR, absolutePath);
+  const rel = relative(STATIC_DIR, absolutePath).split(sep).join("/");
   return `/_next/static/${rel}`;
 }
 
