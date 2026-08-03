@@ -47,7 +47,7 @@ export function requireTestDbUrl(): string {
     parsed = new URL(rawUrl);
   } catch {
     throw new Error(
-      `TEST_DIRECT_URL failed to parse as a URL: "${rawUrl}". ` +
+      "TEST_DIRECT_URL failed to parse as a URL. " +
         "Refusing to run destructive operations against an unparseable " +
         "database URL."
     );
