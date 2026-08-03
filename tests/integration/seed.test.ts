@@ -10,6 +10,17 @@ const dbUrl = requireTestDbUrl();
 
 let prisma: PrismaClient;
 
+async function truncateAllTables(client: PrismaClient) {
+  // Truncate in dependency order for a clean slate
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "BairroVizinho" CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "Shelter" CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "Quarteirao" CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "Bairro" CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "Distrito" CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "Provincia" CASCADE`);
+  await client.$executeRawUnsafe(`TRUNCATE TABLE "User" CASCADE`);
+}
+
 beforeAll(async () => {
   // Deploy migrations to the test database
   execSync("npx prisma migrate deploy", {
@@ -19,14 +30,7 @@ beforeAll(async () => {
 
   prisma = await createTestClient();
 
-  // Truncate all tables in dependency order for a clean slate
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "BairroVizinho" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Shelter" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Quarteirao" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Bairro" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Distrito" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Provincia" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "User" CASCADE`);
+  await truncateAllTables(prisma);
 
   await runSeed(prisma);
 });
@@ -34,13 +38,7 @@ beforeAll(async () => {
 afterAll(async () => {
   if (!prisma) return;
 
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "BairroVizinho" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Shelter" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Quarteirao" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Bairro" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Distrito" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "Provincia" CASCADE`);
-  await prisma.$executeRawUnsafe(`TRUNCATE TABLE "User" CASCADE`);
+  await truncateAllTables(prisma);
 
   await prisma.$disconnect();
 });
@@ -367,6 +365,27 @@ describe("Seed data integration", () => {
     await expect(
       prisma.$executeRaw`INSERT INTO "User" (id, name, role, "verificationStatus", "createdAt", "updatedAt") VALUES (gen_random_uuid(), 'violator', 'CITIZEN'::"UserRole", 'UNVERIFIED'::"VerificationStatus", NOW(), NOW())`,
     ).rejects.toThrow();
+  });
+});
+
+describe("Re-seed idempotency", () => {
+  // Self-contained by design: the test below calls runSeed() again to prove
+  // re-seeding is idempotent, and runSeed() wipes and re-creates every
+  // geographic table. That mutation must never run against the shared
+  // "Seed data integration" state — it would only be safe there as the
+  // file's LAST test (running before or among the read-only tests would
+  // re-seed the database out from under them), and that ordering guarantee
+  // would silently break the moment a new test is appended after it or test
+  // execution is shuffled/concurrent. This describe seeds the database
+  // itself in beforeAll, so it has no dependency on what the shared
+  // describe's beforeAll left behind, and its re-seed can never invalidate
+  // state another describe relies on.
+  //
+  // Keep re-seed mutations confined to this describe, and do not rely on the
+  // post-re-seed rows here as "shared" fixture data for anything else.
+  beforeAll(async () => {
+    await truncateAllTables(prisma);
+    await runSeed(prisma);
   });
 
   it("re-seeding produces identical ids for every geographic row and shelter", async () => {
