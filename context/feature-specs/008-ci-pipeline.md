@@ -26,7 +26,7 @@ The six jobs:
 
 **Secrets:** `TEST_DIRECT_URL` (and any other required env vars) must be added to the GitHub repo's Actions secrets — never committed, never inferred from `.env.example` alone. This unit should not touch the real `DATABASE_URL`/`DIRECT_URL` at all; CI has no legitimate reason to touch the dev database.
 
-**Triggers:** run on push to any branch and on pull requests targeting `main` — this covers both the `dev` branch's ongoing commits and the PR you're about to open.
+**Triggers:** run on push to `main` only and on pull requests targeting `main`. `on.push` was originally unrestricted (any branch), but that caused a duplicate-run race: a push to a branch with an open PR (e.g. `dev` → `main`) fired both a `push` event run and a `pull_request` event run, and the two concurrency groups didn't cancel each other (`github.ref` differs between the events: `refs/heads/<branch>` vs `refs/pull/<n>/merge`) — so both seeded/truncated the shared `TEST_DIRECT_URL` database. Restricted to `main` to match the `pull_request` restriction. Consequence (deliberate): pushes to `dev`/feature branches no longer trigger CI on their own — feature-branch verification happens on the PR itself, which only runs when a PR is open.
 
 **Status visibility:** the workflow's job results should show up as checks on the PR itself, per GitHub's default behavior for repo-configured Actions — no extra configuration should be needed for this, but confirm it actually appears rather than assuming.
 
