@@ -55,15 +55,15 @@ Target roughly 5 bairros per province, 1–3 shelters per bairro, and at least 2
 
 ## Success Checklist
 
-- [ ] `prisma migrate dev` runs cleanly with no manual schema fixes required after generation.
-- [ ] Cidade de Maputo and Província de Maputo are both seeded as `Provincia`-level rows — not one nested under the other. Sofala and Gaza are seeded alongside them.
-- [ ] Matola and Boane are seeded as `Distrito` rows under Província de Maputo.
-- [ ] Each of the four provinces has roughly 5 bairros, and every bairro has at least one shelter.
-- [ ] `Shelter.routeDescription` is a required (non-nullable) column in the generated schema.
-- [ ] Seeding the three mockup shelters (EPC Khongolote, Igreja Católica, Salão Paroquial S. João) produces the same tier/capacity-status combination already shown in `ui-context.md`'s reference mockup.
-- [ ] `BairroVizinho` adjacency exists across at least two different provinces, only between bairros that are actually geographically near each other.
-- [ ] The seed script is data-driven (arrays/loops), not a sequence of hand-repeated creation calls.
-- [ ] An integration test (written before the seed script was finalized) verifies per-province row counts and that adjacency resolves correctly in more than one province.
-- [ ] `npm run build` and `npm run lint` still pass with no errors introduced.
-- [ ] No query helpers, API routes, or UI changes present in the diff — this unit is schema and seed data only.
-- [ ] `progress-tracker.md` updated: unit marked complete, any deviations (e.g. from the assumed província/distrito seeding, or from the target bairro/shelter counts) noted explicitly.
+- [x] `prisma migrate dev` runs cleanly with no manual schema fixes required after generation.
+- [x] Cidade de Maputo and Província de Maputo are both seeded as `Provincia`-level rows — not one nested under the other. Sofala and Gaza are seeded alongside them.
+- [x] Matola and Boane are seeded as `Distrito` rows under Província de Maputo.
+- [x] Each of the four provinces has roughly 5 bairros, and every bairro has at least one shelter.
+- [x] `Shelter.routeDescription` is a required (non-nullable) column in the generated schema.
+- [x] Seeding the three mockup shelters (EPC Khongolote, Igreja Católica, Salão Paroquial S. João) produces the same tier/capacity-status combination already shown in `ui-context.md`'s reference mockup.
+- [x] `BairroVizinho` adjacency exists across at least two different provinces, only between bairros that are actually geographically near each other.
+- [x] The seed script is data-driven (arrays/loops), not a sequence of hand-repeated creation calls.
+- [x] An integration test (written before the seed script was finalized) verifies per-province row counts and that adjacency resolves correctly in more than one province.
+- [x] `npm run build` and `npm run lint` still pass with no errors introduced.
+- [x] No query helpers, API routes, or UI changes present in the diff — this unit is schema and seed data only.
+- [x] `progress-tracker.md` updated: unit marked complete, any deviations (e.g. from the assumed província/distrito seeding, or from the target bairro/shelter counts) noted explicitly.

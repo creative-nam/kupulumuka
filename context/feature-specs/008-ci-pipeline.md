@@ -40,10 +40,10 @@ The six jobs:
 
 ## Success Checklist
 
-- [ ] `.github/workflows/ci.yml` exists with lint, typecheck, unit, integration, build, and e2e jobs, correctly ordered/dependent (build requires integration to succeed first; e2e requires build to succeed first).
-- [ ] Integration tests in CI run against `TEST_DIRECT_URL` (the isolated Supabase test project), confirmed by checking the actual CI logs — not assumed from config alone.
-- [ ] E2E tests in CI run against the production preview server (per unit 1.3c's established pattern), not `next dev`.
-- [ ] A deliberately introduced failing test was pushed and confirmed to make the relevant CI job fail (red), then reverted — proving the pipeline actually catches failures, not just that it runs.
+- [x] `.github/workflows/ci.yml` exists with lint, typecheck, unit, integration, build, and e2e jobs, correctly ordered/dependent (build requires integration to succeed first; e2e requires build to succeed first).
+- [x] Integration tests in CI run against `TEST_DIRECT_URL` (the isolated Supabase test project), confirmed by checking the actual CI logs — not assumed from config alone.
+- [x] E2E tests in CI run against the production preview server (per unit 1.3c's established pattern), not `next dev`.
+- [x] A deliberately introduced failing test was pushed and confirmed to make the relevant CI job fail (red), then reverted — proving the pipeline actually catches failures, not just that it runs.
 - [ ] CI checks appear on the PR itself, confirmed by looking at an actual PR, not assumed.
-- [ ] No secrets committed to the repo; `TEST_DIRECT_URL` and any other required values live only in GitHub Actions secrets.
-- [ ] `progress-tracker.md` updated: unit marked complete, any deviations noted, and a note confirming which human-only steps (adding secrets) were completed.
+- [x] No secrets committed to the repo; `TEST_DIRECT_URL` and any other required values live only in GitHub Actions secrets.
+- [x] `progress-tracker.md` updated: unit marked complete, any deviations noted, and a note confirming which human-only steps (adding secrets) were completed.
