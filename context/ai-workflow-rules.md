@@ -28,6 +28,8 @@ For every feature spec, follow this order and do not skip steps:
 
 If a checklist item can't be turned into a test (e.g. a subjective visual judgment), flag this explicitly rather than silently skipping it — either the checklist item needs rewording into something testable, or it's legitimately a manual-review item and should be marked as such in the spec.
 
+**A checklist item involving an e2e or integration test is not "done" on the basis of a summary claim alone.** Unit 1.2's shelter-search e2e checklist item was reported and closed as passing when it never actually had — the test's locator was ambiguous from the commit that introduced it, and nothing caught this until it was investigated for an unrelated reason two units later. Report the actual test run output (pass/fail counts, test names) for any e2e or integration checklist item, not just a restated version of the checklist ("confirmed by e2e test" is not evidence; `8 passed, 0 failed` with the relevant test names is). If something can't produce real output to show, that's itself worth flagging rather than working around.
+
 ## 4. System Invariants Are Non-Negotiable
 
 The seven invariants in `architecture.md` override any individual feature spec if they ever conflict. If a spec's instructions seem to require breaking one (e.g. a spec that implies gating capacity updates on verification status), stop and flag the conflict rather than implementing it — this almost always means the spec was written wrong, not that the invariant should bend.
@@ -37,6 +39,7 @@ The seven invariants in `architecture.md` override any individual feature spec i
 - If a spec is ambiguous on an implementation detail that doesn't affect behavior (e.g. exact variable naming, minor internal structure), make a reasonable choice consistent with `code-standards.md` and move on — don't stall for clarification on things that don't matter.
 - If a spec is ambiguous on something that **does** affect behavior or violates a stated invariant, stop and ask rather than guessing.
 - If, while implementing one unit, a clearly separate but related need becomes obvious (e.g. building shelter search surfaces a missing index, or reveals a need for a new endpoint), do **not** silently expand scope to fix it. Note it in `progress-tracker.md` under a "Noted, not yet spec'd" section and finish the current unit as scoped.
+- **When an instruction says to update "the tests" for a changed component, treat that as intent, not an exhaustive list.** A component typically has tests at multiple layers — unit/component tests, integration tests, e2e tests — and an instruction naming one layer explicitly doesn't mean the others are exempt. This project has hit real instances of one layer being fixed while another silently broke (a component-test helper updated for a new UI library while the e2e tests kept using the old element's interaction pattern). If a component's DOM structure or interaction pattern changes, check all test layers that exercise it, not just the one named, and flag it explicitly if others need updating too rather than leaving them to fail later.
 
 ## 6. Progress Tracking Is Mandatory, Not Optional Housekeeping
 
@@ -54,11 +57,11 @@ If something is broken and the fix isn't obvious from the current spec, don't wa
 
 ## 8. Review Loop
 
-Treat each completed unit as a pull request, even if there's no formal PR process yet:
+CodeRabbit is installed on this repo and reviews changes automatically. Treat each completed unit as a pull request:
 
 1. Implement against the spec.
 2. Self-check against the success checklist line by line before declaring done.
-3. If a review tool (e.g. CodeRabbit) flags something, or the human reviewer does, don't silently patch it — re-read the original spec, apply the specific correction, and update `progress-tracker.md` to note the correction was made and why.
+3. If CodeRabbit or the human reviewer flags something, don't silently patch it — re-read the original spec, apply the specific correction, and update `progress-tracker.md` to note the correction was made and why.
 
 ## 9. Never Invent Product Decisions
 
@@ -80,4 +83,3 @@ Before starting a unit, check whether it actually combines multiple units. Split
 - Behavior that isn't clearly defined in a feature spec — write/clarify the spec first, rather than resolving the gap inline while coding
 
 If a change can't be verified end to end in one sitting, the scope is too broad — split it into smaller specs rather than pushing through.
-

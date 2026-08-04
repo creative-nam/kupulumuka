@@ -7,7 +7,9 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    exclude: ["**/node_modules/**", "**/tests/e2e/**"],
+    exclude: ["**/node_modules/**", "**/tests/e2e/**", "**/tests/integration/**", "lib/shelters/search.test.ts"],
+    globals: true,
+    env: { TZ: "UTC" },
   },
   resolve: {
     alias: {

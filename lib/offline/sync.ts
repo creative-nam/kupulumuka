@@ -1,0 +1,67 @@
+import { getDb } from "./db";
+import { fetchWithTimeout } from "./fetch-with-timeout";
+import type { GeoSnapshot } from "@/scripts/generate-geo-snapshot";
+import type { SheltersSnapshotItem } from "@/scripts/generate-shelters-snapshot";
+import type { AdjacencyPairRecord } from "./db";
+
+type AdjacencyResponse = { bairroAId: string; bairroBId: string }[];
+
+let inFlightSync: Promise<{ lastSyncedAt: string }> | null = null;
+
+export function syncData(): Promise<{ lastSyncedAt: string }> {
+  if (inFlightSync) {
+    return inFlightSync;
+  }
+
+  inFlightSync = performSync().finally(() => {
+    inFlightSync = null;
+  });
+
+  return inFlightSync;
+}
+
+async function performSync(): Promise<{ lastSyncedAt: string }> {
+  const [geoRes, sheltersRes, adjacencyRes] = await Promise.all([
+    fetchWithTimeout("/geo-snapshot.json"),
+    fetchWithTimeout("/shelters-snapshot.json"),
+    fetchWithTimeout("/api/adjacency"),
+  ]);
+
+  if (!geoRes.ok || !sheltersRes.ok || !adjacencyRes.ok) {
+    throw new Error("Failed to fetch sync data");
+  }
+
+  const geo: GeoSnapshot = await geoRes.json();
+  const shelters: SheltersSnapshotItem[] = await sheltersRes.json();
+  const adjacency: AdjacencyResponse = await adjacencyRes.json();
+
+  const now = new Date().toISOString();
+  const db = getDb();
+
+  await db.transaction(
+    "rw",
+    db.geoSnapshot,
+    db.shelters,
+    db.adjacencyPairs,
+    db.syncMeta,
+    async () => {
+      await db.geoSnapshot.put({ id: "primary", data: geo });
+
+      await db.shelters.clear();
+      await db.shelters.bulkAdd(shelters);
+
+      await db.adjacencyPairs.clear();
+      const pairs: AdjacencyPairRecord[] = adjacency.map((a) => ({
+        bairroAId: a.bairroAId,
+        bairroBId: a.bairroBId,
+      }));
+      if (pairs.length > 0) {
+        await db.adjacencyPairs.bulkAdd(pairs);
+      }
+
+      await db.syncMeta.put({ id: "lastSyncedAt", value: now });
+    },
+  );
+
+  return { lastSyncedAt: now };
+}

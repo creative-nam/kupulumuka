@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+
+  typecheck:
+    name: TypeScript
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - run: npm run typecheck
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - run: npm run test
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
+      DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      TEST_DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - run: npm run test:integration
+
+  build:
+    name: Build
+    needs: integration
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
+      DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Deploy migrations & seed test database
+        run: |
+          npx prisma migrate deploy
+          npx tsx prisma/seed.ts
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - run: npm run build
+
+  e2e:
+    name: E2E Tests
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
+      DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      TEST_DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Ensure Prisma client is generated
+        run: npx prisma generate
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Deploy migrations & seed test database
+        run: |
+          npx prisma migrate deploy
+          npx tsx prisma/seed.ts
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Regenerate geo snapshot (UUIDs must match seeded database)
+        run: npx tsx scripts/generate-geo-snapshot.ts
+        env:
+          DIRECT_URL: ${{ secrets.TEST_DIRECT_URL }}
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

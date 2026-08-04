@@ -1,0 +1,8 @@
+reviews:
+  path_filters:
+    - "!**/*.lock"
+    - "!dist/**/*"
+    - "!node_modules/**/*"
+    - "!**.claude/**"
+    - "!**/.agents/**"
+      

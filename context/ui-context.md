@@ -18,76 +18,63 @@ Defined as CSS custom properties (e.g. via `globals.css`) and surfaced to Tailwi
 
 ### Surfaces
 
-
-| Token          | Light     | Dark      | Use                     |
-| -------------- | --------- | --------- | ----------------------- |
-| `--bg-page`    | `#F2ECDF` | `#201A12` | App background          |
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--bg-page` | `#F2ECDF` | `#201A12` | App background |
 | `--bg-surface` | `#FFFDF8` | `#2B2318` | Cards, elevated content |
-| `--border`     | `#E4DAC5` | `#4A3E2C` | Default hairline border |
-
+| `--border` | `#E4DAC5` | `#4A3E2C` | Default hairline border |
 
 ### Text
 
-
-| Token              | Light     | Dark      | Use                                              |
-| ------------------ | --------- | --------- | ------------------------------------------------ |
-| `--text-primary`   | `#2A2118` | `#F5EEDF` | Headings, primary content                        |
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--text-primary` | `#2A2118` | `#F5EEDF` | Headings, primary content |
 | `--text-secondary` | `#6B5D4A` | `#B8A98C` | Supporting text, metadata, landmark descriptions |
-
 
 ### Brand Accent
 
-
-| Token         | Light     | Dark      | Use                                             |
-| ------------- | --------- | --------- | ----------------------------------------------- |
-| `--accent`    | `#A8651B` | `#DDA24C` | Primary buttons, active states, links, wordmark |
-| `--on-accent` | `#FFFDF8` | `#201A12` | Text/icons placed on top of `--accent`          |
-
+| Token | Light | Dark | Use |
+|---|---|---|---|
+| `--accent` | `#A8651B` | `#DDA24C` | Primary buttons, active states, links, wordmark |
+| `--on-accent` | `#FFFDF8` | `#201A12` | Text/icons placed on top of `--accent` |
 
 ### Capacity Status (functional — never repurposed for anything else)
 
 Capacity color always means capacity. Do not reuse these hues for unrelated success/error states elsewhere in the app — that would break the at-a-glance reading this system depends on.
 
-
-| Status                      | Light bg / text       | Dark bg / text        |
-| --------------------------- | --------------------- | --------------------- |
-| `livre` (available)         | `#E7F3E4` / `#256D3F` | `#1E3A2A` / `#6FCF97` |
+| Status | Light bg / text | Dark bg / text |
+|---|---|---|
+| `livre` (available) | `#E7F3E4` / `#256D3F` | `#1E3A2A` / `#6FCF97` |
 | `quase_cheio` (nearly full) | `#FBEFDD` / `#9A5B12` | `#3D2C12` / `#E0A542` |
-| `esgotado` (full)           | `#F7E3E1` / `#9C2B23` | `#3B1E1B` / `#E2867E` |
-
+| `esgotado` (full) | `#F7E3E1` / `#9C2B23` | `#3B1E1B` / `#E2867E` |
 
 ### Verification Tier Badges (functional — distinct from both accent and status)
 
-
-| Badge                  | Light bg / text       | Dark bg / text        |
-| ---------------------- | --------------------- | --------------------- |
-| Tier 1 — "Oficial"     | `#E1EEF4` / `#1F5C7A` | `#16344A` / `#7FB8DA` |
-| Tier 2 — "Comunitário" | `#EFE7D5` / `#8A7A5E` | `#3A331F` / `#C9B989` |
-
+| Badge | Light bg / text | Dark bg / text |
+|---|---|---|
+| Tier 1 — "Oficial" | `#E1EEF4` / `#1F5C7A` | `#16344A` / `#7FB8DA` |
+| Tier 2 — "Comunitário" | `#EFE7D5` / `#6B5D4A` | `#3A331F` / `#C9B989` |
 
 ## Typography
 
 - **Display font: Fraunces** (variable serif, warm and slightly characterful without tipping into decorative) for screen titles, section headers, and the app wordmark only. **Body text stays system font stack** — the two together keep most of the app's actual text (body copy, descriptions, labels) at zero font-loading cost, while spending a small, deliberate budget on the handful of short headline strings per screen where personality actually registers.
-- **Load via** `next/font/google` **(Fraunces), never a** `<link>` **to Google's CDN directly.** Next.js's built-in font optimization downloads and self-hosts the font at build time, so it ships from the same origin as the rest of the app — cacheable by the service worker as part of the app shell, and with no separate runtime request to an external font host that may be unreliable on a slow or congested connection. This matters more here than in most apps: a request to `fonts.googleapis.com` failing or stalling on a bad connection is exactly the failure mode this product needs to avoid.
-- **Subset to** `latin` **+ Portuguese diacritics** (ã, õ, ç, á, é, í, ó, ú, â, ê) — don't ship the full glyph set. Load only the weights actually used (500 for body headings, 600 for the wordmark/hero moments) — not the full variable-font weight range.
-- `font-display: swap` — system font renders immediately, Fraunces swaps in once loaded. Never block first paint on the display font.
-- **System font stack** (body text, UI labels, buttons): 
+- **Load via `next/font/google` (Fraunces), never a `<link>` to Google's CDN directly.** Next.js's built-in font optimization downloads and self-hosts the font at build time, so it ships from the same origin as the rest of the app — cacheable by the service worker as part of the app shell, and with no separate runtime request to an external font host that may be unreliable on a slow or congested connection. This matters more here than in most apps: a request to `fonts.googleapis.com` failing or stalling on a bad connection is exactly the failure mode this product needs to avoid.
+- **Subset to `latin` + Portuguese diacritics** (ã, õ, ç, á, é, í, ó, ú, â, ê) — don't ship the full glyph set. Load only the weights actually used (500 for body headings, 600 for the wordmark/hero moments) — not the full variable-font weight range.
+- **`font-display: swap`** — system font renders immediately, Fraunces swaps in once loaded. Never block first paint on the display font.
+- **System font stack** (body text, UI labels, buttons):
   ```css
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
   ```
 - **Weights:** body/UI stays at 400 (regular) and 500 (medium) only, as before. Fraunces adds 500 for headings and 600 reserved for the wordmark and rare hero moments — don't spread 600 across ordinary screen titles, or the "calm, legible" quality of the two-weight system erodes.
 - **Type scale:**
-
-  | Role                    | Size    | Font     | Weight |
-  | ----------------------- | ------- | -------- | ------ |
-  | Screen title            | 15px    | Fraunces | 500    |
-  | Card title              | 14px    | System   | 500    |
-  | Body / description      | 12–13px | System   | 400    |
-  | Badge / pill label      | 11px    | System   | 500    |
-  | Eyebrow / context label | 11px    | System   | 400    |
-  | Wordmark / hero moment  | 20px+   | Fraunces | 600    |
-
+  | Role | Size | Font | Weight |
+  |---|---|---|---|
+  | Screen title | 15px | Fraunces | 500 |
+  | Card title | 14px | System | 500 |
+  | Body / description | 12–13px | System | 400 |
+  | Badge / pill label | 11px | System | 500 |
+  | Eyebrow / context label | 11px | System | 400 |
+  | Wordmark / hero moment | 20px+ | Fraunces | 600 |
 
 ## Spacing & Shape
 
@@ -109,6 +96,13 @@ Tabler Icons, **outline style only** (matches the mockup: `ti-arrow-left`, `ti-m
 - **Tier badge:** icon + label, never icon alone (`ti-check` + "Oficial", `ti-users` + "Comunitário").
 - **Primary action button** (e.g. "Subscrever alertas"): full-width in mobile contexts, `--accent` background, `--on-accent` text, 10px radius, icon + verb-first label, sentence case, no terminal punctuation (see Copy Conventions below).
 - **Back navigation:** icon-only (`ti-arrow-left`) paired with a two-line header (small `--text-secondary` context label above, `--text-primary` title below) — as in the mockup, not a separate breadcrumb component.
+- **Select / dropdown (geographic picker and any future selection field):** use shadcn/ui's `Select` (Radix-based), not a native `<select>`. Unit 1.1 originally used native selects for zero-JS simplicity, but the OS-rendered dropdown list broke visual cohesion badly enough on real devices to be worth the small JS cost of a themed component instead — this supersedes that earlier choice. Style to match the rest of the design system, not Radix's defaults: closed-state field uses the same `--bg-surface`/`--border`/12px-radius treatment already validated in the picker; open dropdown panel uses `--bg-surface` background and `--border` outline (not a plain white/system panel); selected/highlighted option uses a subtle `--accent`-tinted background, never `--accent` at full opacity as a fill (reserve full-opacity `--accent` for primary buttons only, per the Brand Accent tokens above); option text in `--text-primary`, disabled/placeholder text in `--text-secondary`. Preserve full keyboard and screen-reader accessibility — this is a real requirement Radix supports natively, not something being traded away for the visual upgrade.
+
+- **App header (persistent, lives in the root layout, every screen gets it):** `position: fixed` at the top of the viewport (not `sticky` — the header is deliberately removed from normal document flow, not scrolling-with-then-pinned), `--bg-surface` background with a 1px `--border` bottom hairline separating it from page content. Left: the "Kupulumuka" wordmark in Fraunces 600, sized smaller than a hero moment (~16–18px, not the large placeholder-era size) — acts as the app's persistent brand anchor and links to `/explorar` (the app's actual entry point). Right: the theme toggle, icon-only — a sun/moon icon (e.g. Tabler `ti-sun`/`ti-moon`, swapping based on current theme), no visible text label (icon convention is well understood for this control), with an accessible label (`aria-label="Alternar tema"`) for screen readers, and a minimum 44×44px tap target even though the icon itself is smaller. Header height ~52–56px. **Because the header is `fixed` and removed from flow, every page's root container must apply a top offset equal to the header's actual height** (e.g. `padding-top` or `margin-top` matching the header height token, kept in sync as a shared value rather than hardcoded separately per page) — otherwise page content renders underneath the header instead of below it. This offset is a page-layout responsibility, not something each page invents independently; define it once (e.g. as a layout wrapper or a shared CSS variable) and apply it consistently.
+
+## Layout
+
+- **Screen horizontal padding is a hard requirement, not a suggestion:** 12–16px on every screen, applied consistently — see Spacing & Shape above. Content (headings, cards, form fields) must never sit flush against the viewport edge. If this is missing from a rendered screen, treat it as a bug against this spec, not a style nicety to defer.
 
 ## Copy Conventions
 
@@ -117,4 +111,6 @@ Tabler Icons, **outline style only** (matches the mockup: `ti-arrow-left`, `ti-m
 - **Status labels are nouns/short states, not sentences:** "Livre", "Quase cheio", "Esgotado" — never "Este abrigo está cheio."
 - **Empty states are an invitation, not an apology:** e.g. no shelters found nearby should say what to do next (report one, expand search radius), not just "Nenhum resultado."
 - **Never blame the user or the network for failures.** "Sem ligação — a mostrar dados guardados" (offline, showing cached data), not "Erro: falha de rede."
-
+- **The results screen title must name the bairro, not just say "Abrigos disponíveis" generically.** The bairro name belongs in the prominent title, not only in the small back-nav label — that's the difference between someone glancing at the screen and knowing where these results are for versus having to read the smaller supporting text. Two cases, distinct copy:
+  - **Local results** (shelters found in the selected bairro): *"Abrigos disponíveis em {bairroName}"*.
+  - **Neighboring-bairro overflow** (the selected bairro had none, results are from an adjacent bairro per the `fromNeighboringBairro` flag from unit 1.2/spec 004): *"Abrigos próximos a {bairroName}"* — this is a safety-relevant distinction, not a wording preference. Presenting neighboring-bairro results under the same "disponíveis em {bairroName}" title as local ones would misrepresent how close they actually are, in exactly the way the offline cache-staleness banner exists to prevent for time-of-data rather than location. If this distinction isn't currently visible in the UI at all, that's a gap to close, not just a copy tweak.

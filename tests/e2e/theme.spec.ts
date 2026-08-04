@@ -18,8 +18,7 @@ async function getPageBackgroundColor(
 
 test.describe("theme resolution", () => {
   test("uses the light page background by default", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByText("Kupulumuka")).toBeVisible();
+    await page.goto("/explorar");
 
     const backgroundColor = await getPageBackgroundColor(page);
     expect(backgroundColor).toBe(hexToRgb(themeTokens.light.bgPage));
@@ -29,14 +28,16 @@ test.describe("theme resolution", () => {
     page,
   }) => {
     await page.emulateMedia({ colorScheme: "dark" });
-    await page.goto("/");
+    await page.goto("/explorar");
 
     const backgroundColor = await getPageBackgroundColor(page);
     expect(backgroundColor).toBe(hexToRgb(themeTokens.dark.bgPage));
   });
 
-  test("persists a manual theme override across reload", async ({ page }) => {
-    await page.goto("/");
+  test("persists a manual theme override across reload via the layout toggle", async ({
+    page,
+  }) => {
+    await page.goto("/explorar");
 
     const toggle = page.getByRole("button", { name: /alternar tema/i });
     await toggle.click();

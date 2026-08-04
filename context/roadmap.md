@@ -24,9 +24,13 @@ Province → district → bairro → quarteirão selection, working against seed
 The screen we already mocked up — Tier 1 before Tier 2, capacity status pill, landmark route description. This is the single most important unit in the whole build: it's the core value proposition with no auth, no offline complexity yet.
 *Depends on: 1.1.*
 
-**1.3 Offline caching**
-Service worker caches the app shell + geographic snapshot; Dexie stores it for offline search. Search must return real results with zero network.
-*Depends on: 1.2.*
+**1.3 Offline caching** *(split into three sub-units after scoping — see `feature-specs/005`–`007`)*
+- **1.3a — Shelters snapshot & shared ranking logic:** pure data/logic groundwork, no offline infra yet.
+- **1.3b — Offline data sync & fallback rendering:** Dexie sync + client-side fallback for a *warm* offline session (tab already open, connection drops).
+- **1.3c — Service worker precaching:** the *cold* offline case (tab closed, reopened with no network) — requires the app shell itself to be precached.
+
+Service worker caches the app shell; geographic and shelter snapshots are served via StaleWhileRevalidate runtime caching; Dexie stores them for offline search. Search must return real results with zero network.
+*Depends on: 1.2. Sub-units are sequential (1.3a → 1.3b → 1.3c).*
 
 ## Phase 2 — Community contribution
 
@@ -44,7 +48,7 @@ Ownership-gated capacity status write, independent of `verification_status` (inv
 
 **2.4 Offline contribution queue**
 Registrations/capacity updates made while offline are queued (Dexie) and synced once back online.
-*Depends on: 2.3, 1.3.*
+*Depends on: 2.3, 1.3b (Dexie sync pattern — offline write-queueing follows the same warm-offline mechanism, not the cold-start service worker layer).*
 
 ## Phase 3 — Alerts (subscription only)
 
@@ -66,7 +70,7 @@ Admin view of pending community contributors; approve/reject; approval cascades 
 
 **5.1 PWA installability**
 Manifest, icons, install prompt, offline fallback page for uncached routes.
-*Depends on: 1.3.*
+*Depends on: 1.3c (needs the service worker/precaching layer in place, not just the data/sync groundwork in 1.3a/1.3b).*
 
 **5.2 Accessibility & performance pass**
 Contrast check against both theme modes, keyboard navigation, Lighthouse pass on a throttled 3G profile.
@@ -74,4 +78,4 @@ Contrast check against both theme modes, keyboard navigation, Lighthouse pass on
 
 ---
 
-**Suggested build order:** 0.1 → 0.2 → 1.1 → 1.2 → 1.3 → 2.1 → 2.2 → 2.3 → 2.4 → 3.1 → 4.1 → 4.2 → 5.1 → 5.2. Phase 3 and Phase 4 don't depend on each other and could swap order if one becomes more urgent to demo.
+**Suggested build order:** 0.1 → 0.2 → 1.1 → 1.2 → 1.3a → 1.3b → 1.3c → 2.1 → 2.2 → 2.3 → 2.4 → 3.1 → 4.1 → 4.2 → 5.1 → 5.2. Phase 3 and Phase 4 don't depend on each other and could swap order if one becomes more urgent to demo.

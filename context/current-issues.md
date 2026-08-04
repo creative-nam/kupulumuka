@@ -1,0 +1,10 @@
+# Current Issues
+
+## 1. `geographic-picker.test.tsx` — "resets lower levels when a parent selection changes" times out (5000ms)
+
+- **Status:** Pre-existing, unowned, **still open**. Reproduced on clean `HEAD` (commit `71bb9bc`) with `git stash` — not introduced by the deterministic-id work. The seed-transaction investigation (`progress-tracker.md` "Fix — seed wipe-and-rebuild wrapped in a single transaction") identified it as the known load-sensitive flake and measured the reproduction rate at **closer to 2-of-3 failures under load**, not a one-off — see that entry's follow-up note (1).
+- **Failure:** `Error: Test timed out in 5000ms` at `components/geographic-picker.test.tsx:193`. Fails both in the full `npm run test` run and in isolation (`npx vitest run components/geographic-picker.test.tsx`), and also with `-t "resets lower levels"`.
+- **Symptom:** The test that changes a parent selection and asserts lower levels reset hangs past the 5s default timeout. Likely a Base UI Select popup/open interaction or an awaiting `userEvent` promise that never resolves under jsdom — timing-sensitive, not a hard assertion mismatch. Under load the interaction sequence (4 selects + a reset re-selection) exceeds the 5s `testTimeout` (failures measured at 5093–5169ms).
+- **Implicated files:** `components/geographic-picker.test.tsx` (test at line 193), possibly `components/geographic-picker.tsx` or `components/ui/select.tsx` (Base UI combobox behavior in jsdom).
+- **Impact:** Load-sensitive — isolated runs pass reliably (verified 3× in isolation, plus full-suite and parallel-load runs during the 2026-08-02 docs/polish batch all passed), but it fails intermittently under parallel load at roughly 2-of-3 rate, keeping `npm run test` from being reliably fully-green.
+- **Next step when picked up:** Determine whether the interaction awaits an element that never becomes actionable (e.g. option list not opening in jsdom), add the missing step or a targeted `findBy`/wait, and confirm the whole file passes in isolation and in the full run.

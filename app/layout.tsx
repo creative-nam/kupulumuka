@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Fraunces } from "next/font/google";
 
+import { AppHeader } from "@/components/app-header";
 import { ThemeScript } from "@/components/theme-script";
+import { SyncOnLoad } from "@/components/sync-on-load";
+import { ServiceWorkerRegister } from "@/components/service-worker-register";
 
 import "./globals.css";
 
@@ -24,8 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt" suppressHydrationWarning>
-      <body className={`${fraunces.variable} antialiased`}>
+      <body className={`${fraunces.variable} antialiased pt-(--header-height)`}>
         <ThemeScript />
+        <SyncOnLoad />
+        <ServiceWorkerRegister />
+        <AppHeader />
         {children}
       </body>
     </html>
